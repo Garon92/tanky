@@ -65,12 +65,12 @@ export function buildLevel(def: LevelDef, difficulty: BotLevel, playerName: stri
   if (def.player.weapons) player.inventory = { ...def.player.weapons };
   player.angle = def.enemies[0] && def.enemies[0].x < def.player.x ? 135 : 45;
 
-  const hpMul = difficulty === 'easy' ? 0.8 : difficulty === 'hard' ? 1.15 : 1;
+  const hpMul = difficulty === 'easy' ? 0.7 : difficulty === 'hard' ? 1.1 : 0.85;
   const enemies = def.enemies.map((e) => {
     const t = new Tank({ x: e.x, team: 1, kind: e.kind, control: e.kind === 'dummy' ? 'passive' : 'bot', botLevel: difficulty, inventory: e.weapons });
     t.maxHp = Math.round(t.maxHp * hpMul);
     t.hp = t.maxHp;
-    t.dmgMul = difficulty === 'easy' ? 0.7 : difficulty === 'hard' ? 1.1 : 0.9;
+    t.dmgMul = difficulty === 'easy' ? 0.5 : difficulty === 'hard' ? 1 : 0.72;
     t.angle = e.x > def.player.x ? 135 : 45;
     return world.addTank(t);
   });

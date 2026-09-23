@@ -141,7 +141,7 @@ export const LEVELS: LevelDef[] = [
     intro: 'Za hradbou z dřevěných beden se krčí dva tanky.',
     tip: 'Dřevěné bedny se dají rozstřílet. Válec se kutálí po zemi až k cíli.',
     terrain: { pts: [[0, 600], [600, 612], [1000, 592], [1600, 602]], noise: 3, seed: 88 },
-    player: { x: 200, weapons: { shell: 999, roller: 3, big: 2 } },
+    player: { x: 200, weapons: { shell: 999, roller: 3, big: 2, triple: 1 }, hp: 110 },
     enemies: [
       { kind: 'soldier', x: 1210 },
       { kind: 'cadet', x: 1420 },
@@ -157,7 +157,7 @@ export const LEVELS: LevelDef[] = [
     intro: 'Nepřátelé stojí vysoko na útesu. Ty jsi dole.',
     tip: 'Když podkopeš zem pod tankem, spadne – a pád bolí! Zkus Krtka.',
     terrain: { pts: [[0, 700], [400, 692], [700, 610], [980, 430], [1180, 330], [1600, 305]], noise: 5, seed: 99 },
-    player: { x: 260, weapons: { shell: 999, digger: 2, big: 2, triple: 2 } },
+    player: { x: 260, weapons: { shell: 999, digger: 2, big: 2, triple: 2 }, hp: 110 },
     enemies: [
       { kind: 'sniper', x: 1260 },
       { kind: 'soldier', x: 1470 },
@@ -203,7 +203,7 @@ export const LEVELS: LevelDef[] = [
     intro: 'Tři hlídky najednou. Z nebe občas spadne bedna.',
     tip: 'Nejdřív se zbav nejbližšího nepřítele. Bedny sbírej!',
     terrain: { pts: [[0, 580], [250, 540], [500, 622], [800, 520], [1100, 602], [1350, 540], [1600, 582]], noise: 6, seed: 1212 },
-    player: { x: 150, weapons: { shell: 999, big: 2, triple: 2, cluster: 1 } },
+    player: { x: 150, weapons: { shell: 999, big: 2, triple: 2, cluster: 1 }, hp: 140 },
     enemies: [
       { kind: 'cadet', x: 720 },
       { kind: 'soldier', x: 1110 },
@@ -220,11 +220,12 @@ export const LEVELS: LevelDef[] = [
     intro: 'Na Měsíci je slabá gravitace. Všechno letí dál a pomaleji.',
     tip: 'Střely tu doletí mnohem dál – ubírej sílu!',
     terrain: { pts: [[0, 620], [500, 600], [800, 642], [1100, 590], [1600, 620]], noise: 5, seed: 1313, craters: [[520, 50], [900, 70], [1260, 45]] },
-    player: { x: 200, weapons: { shell: 999, big: 2, bouncer: 2 } },
+    player: { x: 200, weapons: { shell: 999, big: 2, bouncer: 2, triple: 1 }, hp: 120 },
     enemies: [
       { kind: 'soldier', x: 1150 },
       { kind: 'soldier', x: 1460 },
     ],
+    crateChance: 0.25,
     par: 4,
   },
   {
@@ -234,7 +235,7 @@ export const LEVELS: LevelDef[] = [
     intro: 'Mezi krátery se schovává Ostrostřelec a Obr.',
     tip: 'Chytrá raketa se za letu sama stáčí k nepříteli.',
     terrain: { pts: [[0, 560], [300, 620], [600, 560], [900, 640], [1200, 540], [1600, 600]], noise: 8, seed: 1414, craters: [[300, 60], [640, 55], [900, 80], [1050, 40]] },
-    player: { x: 180, weapons: { shell: 999, homing: 2, big: 2, cluster: 1 } },
+    player: { x: 180, weapons: { shell: 999, homing: 2, big: 2, cluster: 1 }, hp: 120 },
     enemies: [
       { kind: 'sniper', x: 1000 },
       { kind: 'heavy', x: 1450 },
@@ -249,7 +250,7 @@ export const LEVELS: LevelDef[] = [
     intro: 'Obrovský Generál hlídá sopku. Tohle je poslední bitva!',
     tip: 'Generál vydrží hodně a má spoustu zbraní. Sbírej bedny a použij všechno!',
     terrain: { pts: [[0, 600], [340, 612], [560, 740], [760, 740], [960, 600], [1150, 452], [1600, 440]], noise: 5, seed: 1515 },
-    player: { x: 180, weapons: { shell: 999, big: 3, mega: 1, homing: 2, triple: 3, cluster: 2 }, hp: 120 },
+    player: { x: 180, weapons: { shell: 999, big: 3, mega: 1, homing: 2, triple: 3, cluster: 2 }, hp: 160 },
     enemies: [
       { kind: 'general', x: 1420 },
       { kind: 'cadet', x: 1240 },
