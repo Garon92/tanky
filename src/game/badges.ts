@@ -111,7 +111,7 @@ export class BadgeTracker {
     if (wave >= 10) this.give('wave10');
   }
 
-  result(r: ResultData, m: Match, ctx: { level?: number; totalStars?: number; maxStars?: number; campaignDone?: boolean; wave?: number; score?: number; damageTaken?: number; vsBot?: boolean }): void {
+  result(r: ResultData, _m: Match, ctx: { level?: number; totalStars?: number; maxStars?: number; campaignDone?: boolean; wave?: number; score?: number; damageTaken?: number; vsBot?: boolean }): void {
     if (r.mode === 'campaign' && r.won) {
       this.give('first-win');
       if ((r.stars ?? 0) >= 3) this.give('perfect');
@@ -120,10 +120,7 @@ export class BadgeTracker {
       if (ctx.campaignDone) this.give('campaign');
       if (ctx.totalStars !== undefined && ctx.maxStars !== undefined && ctx.totalStars >= ctx.maxStars) this.give('all-stars');
     }
-    if (r.mode === 'duel' && ctx.vsBot) {
-      const winner = m.world.tanks.find((t) => t.alive && t.hp > 0);
-      if (winner?.control === 'human') this.give('duel-win');
-    }
+    if (r.mode === 'duel' && ctx.vsBot && r.won === true) this.give('duel-win');
     if (r.mode === 'survival' && ctx.wave !== undefined) {
       // the wave in progress when the player fell doesn't count
       const cleared = ctx.wave - 1;

@@ -1887,3 +1887,21 @@ html[data-input='touch'] .tk-reward .g92-kbd {
 .tk-fast[hidden] {
   display: none;
 }
+
+/* teams: left column = team 1, right column = team 2 */
+.tk-slots.is-teams .tk-slot__head::after {
+  margin-left: auto;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: var(--g92-fs-xs);
+  font-weight: var(--g92-fw-black);
+  letter-spacing: 0.04em;
+  background: var(--g92-surface-2);
+  color: var(--g92-text-muted);
+}
+.tk-slots.is-teams .tk-slot:nth-child(odd) .tk-slot__head::after {
+  content: 'TÝM 1';
+}
+.tk-slots.is-teams .tk-slot:nth-child(even) .tk-slot__head::after {
+  content: 'TÝM 2';
+}

@@ -299,9 +299,13 @@ export function showDuelSetup(save: Save): Screen<DuelSetup | null> {
   }, { 'data-primary': true });
   const warn = h('p', { class: 'tk-warn', hidden: true }, 'Hrát musí aspoň dva.');
   const refresh = () => {
-    const n = cfg.slots.filter((x) => x.control !== 'off').length;
-    startBtn.disabled = n < 2;
-    warn.hidden = n >= 2;
+    const on = cfg.slots.map((x) => x.control !== 'off');
+    const n = on.filter(Boolean).length;
+    const teamsOk = !cfg.teams || ((on[0] || on[2]) && (on[1] || on[3]));
+    startBtn.disabled = n < 2 || !teamsOk;
+    warn.hidden = !startBtn.disabled;
+    warn.textContent = n < 2 ? 'Hrát musí aspoň dva.' : 'Každý tým potřebuje aspoň jeden tank.';
+    slots.classList.toggle('is-teams', !!cfg.teams);
   };
   cfg.slots.forEach((slot, i) => {
     const color = TEAM_COLORS[i] as string;
@@ -353,6 +357,13 @@ export function showDuelSetup(save: Save): Screen<DuelSetup | null> {
   const opts = h(
     'div',
     { class: 'tk-opts' },
+    option('Týmy', cfg.teams, [
+      { v: false, label: 'Každý sám' },
+      { v: true, label: '🔴🟢 proti 🔵🟡' },
+    ], (v) => {
+      cfg.teams = v;
+      refresh();
+    }),
     option('Hraje se na', cfg.rounds, [1, 3, 5, 10].map((v) => ({ v, label: v === 1 ? '1 výhru' : v < 5 ? `${v} výhry` : `${v} výher` })), (v) => (cfg.rounds = v)),
     option('Životy', cfg.hp, [
       { v: 'onehit' as const, label: 'Jeden zásah' },

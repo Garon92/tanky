@@ -25,6 +25,7 @@ export interface SaveData {
     crates: boolean;
     biome: string;
     walls: 'open' | 'bounce';
+    teams: boolean;
   };
   prefs: { guide: GuideLength; shake: boolean; hints: boolean };
   stats: { shots: number; hits: number; kills: number; games: number; wins: number };
@@ -49,6 +50,7 @@ export const defaultSave = (): SaveData => ({
     crates: true,
     biome: 'random',
     walls: 'open',
+    teams: false,
   },
   prefs: { guide: 'short', shake: true, hints: true },
   stats: { shots: 0, hits: 0, kills: 0, games: 0, wins: 0 },

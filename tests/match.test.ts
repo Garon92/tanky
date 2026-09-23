@@ -126,3 +126,36 @@ describe('match flow', () => {
     expect(m.world.targets.length).toBeGreaterThan(0);
   });
 });
+
+describe('team duel', () => {
+  it('2 vs 2 bots: the whole team scores and the match ends', () => {
+    const mode = new DuelMode({
+      slots: [
+        { control: 'hard', guide: false },
+        { control: 'hard', guide: false },
+        { control: 'normal', guide: false },
+        { control: 'normal', guide: false },
+      ],
+      rounds: 1,
+      hp: 'onehit',
+      wind: 'off',
+      crates: false,
+      biome: 'meadow',
+      walls: 'open',
+      teams: true,
+    });
+    const m = new Match(mode, { guide: 'off', hints: false }, 11);
+    m.begin();
+    expect(mode.tanks.map((t) => t.team)).toEqual([0, 1, 0, 1]);
+    // teams keep to their side
+    const left = mode.tanks.filter((t) => t.x < 800).map((t) => t.team);
+    expect(new Set(left).size).toBe(1);
+    for (let i = 0; i < 900 / SIM_DT && m.phase !== 'over'; i++) m.update(SIM_DT);
+    expect(m.phase).toBe('over');
+    const winners = mode.tanks.filter((t) => t.wins > 0);
+    if (winners.length) {
+      expect(winners.length).toBe(2);
+      expect(winners[0]!.team).toBe(winners[1]!.team);
+    }
+  });
+});

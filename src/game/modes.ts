@@ -134,6 +134,8 @@ export interface DuelConfig {
   crates: boolean;
   biome: BiomeId | 'random';
   walls: 'open' | 'bounce';
+  /** 2 teams: slots 1+3 (red, green) vs 2+4 (blue, yellow). */
+  teams?: boolean;
 }
 
 export class DuelMode extends Mode {
@@ -153,7 +155,7 @@ export class DuelMode extends Mode {
       const bot = s.control !== 'human';
       const t = new Tank({
         x: 0,
-        team: i,
+        team: this.cfg.teams ? i % 2 : i,
         kind: 'player',
         control: bot ? 'bot' : 'human',
         botLevel: bot ? (s.control as BotLevel) : 'normal',
@@ -181,8 +183,12 @@ export class DuelMode extends Mode {
       obstacles: true,
     });
     world.oneHit = this.cfg.hp === 'onehit';
-    // shuffle who spawns where each round
-    const order = this.match.rng.shuffle(this.tanks.slice());
+    // shuffle who spawns where each round (teams: each team keeps to one side, sides swap randomly)
+    let order = this.match.rng.shuffle(this.tanks.slice());
+    if (this.cfg.teams) {
+      const leftTeam = this.match.rng.chance(0.5) ? 0 : 1;
+      order = [...order.filter((t) => t.team === leftTeam), ...order.filter((t) => t.team !== leftTeam)];
+    }
     order.forEach((t, i) => {
       t.x = spawns[i] as number;
       t.alive = true;
@@ -212,14 +218,21 @@ export class DuelMode extends Mode {
     this.lastWinner = winner;
     this.roundDraw = !winner;
     if (winner) {
-      winner.wins++;
-      this.match.announce({ text: `${winner.name} vyhrává kolo!`, sub: this.scoreLine(), color: winner.color, kind: 'round' });
+      // the whole team scores (in free-for-all a team is one tank)
+      const mates = this.tanks.filter((t) => t.team === winner.team);
+      for (const t of mates) t.wins++;
+      const who = mates.length > 1 ? `${mates.map((t) => t.name).join(' a ')} vyhrávají kolo!` : `${winner.name} vyhrává kolo!`;
+      this.match.announce({ text: who, sub: this.scoreLine(), color: winner.color, kind: 'round' });
     } else this.match.announce({ text: 'Remíza!', sub: 'Nikdo nepřežil', kind: 'round' });
     if (winner && winner.wins >= this.cfg.rounds) return 'over';
     return 'roundOver';
   }
 
   scoreLine(): string {
+    if (this.cfg.teams) {
+      const w = (team: number) => this.tanks.find((t) => t.team === team)?.wins ?? 0;
+      return `${w(0)} : ${w(1)}`;
+    }
     return this.tanks.map((t) => t.wins).join(' : ');
   }
 
@@ -239,7 +252,7 @@ export class DuelMode extends Mode {
   override guideRatio(t: Tank): number {
     if (!t.guide) return 0;
     // the original handicap: +20 % of the path for each round behind, −20 % for each round ahead
-    const others = this.tanks.filter((o) => o !== t).map((o) => o.wins);
+    const others = this.tanks.filter((o) => o.team !== t.team).map((o) => o.wins);
     const lead = t.wins - Math.max(0, ...others);
     return clamp(0.5 * (1 - 0.2 * lead), 0.12, 1);
   }
@@ -247,11 +260,13 @@ export class DuelMode extends Mode {
   results(): ResultData {
     const w = this.lastWinner;
     const humans = this.tanks.filter((t) => t.control === 'human');
-    const humanWon = !!w && w.control === 'human';
+    const winners = w ? this.tanks.filter((t) => t.team === w.team) : [];
+    const humanWon = winners.some((t) => t.control === 'human');
+    const humanTeams = new Set(humans.map((t) => t.team));
     return {
       mode: 'duel',
-      won: humans.length === 1 ? humanWon : null,
-      title: w ? `${w.name} vítězí!` : 'Remíza!',
+      won: humanTeams.size === 1 ? humanWon : null,
+      title: winners.length > 1 ? `${winners.map((t) => t.name).join(' a ')} vítězí!` : w ? `${w.name} vítězí!` : 'Remíza!',
       subtitle: `Výsledek ${this.scoreLine()}`,
       color: w?.color,
       stats: [],
