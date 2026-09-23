@@ -1402,23 +1402,8 @@ html[data-input='touch'] .tk-fire {
 
 /* ---- duel setup ---- */
 .tk-screen--duel .tk-panel {
-  --tk-pad: clamp(1.5rem, 1rem + 3vw, 2.5rem);
   justify-items: stretch;
   text-align: left;
-  padding-bottom: 0;
-}
-
-/* "Hrát" stays pinned to the bottom of the screen while the long setup scrolls */
-.tk-screen--duel .tk-panel > .g92-overlay__actions {
-  position: sticky;
-  bottom: 0;
-  z-index: 2;
-  width: auto;
-  justify-self: stretch;
-  margin: 0 calc(-1 * var(--tk-pad));
-  padding: var(--g92-space-5) var(--tk-pad) max(var(--tk-pad), env(safe-area-inset-bottom, 0px));
-  border-radius: 0 0 var(--g92-radius-2xl) var(--g92-radius-2xl);
-  background: linear-gradient(to bottom, transparent, var(--g92-surface) var(--g92-space-5));
 }
 
 .tk-screen--duel .g92-eyebrow {
@@ -1693,8 +1678,8 @@ html[data-input='touch'] .tk-reward .g92-kbd {
   border-top: 1px solid var(--g92-border);
 }
 
-.tk-intro-back {
-  justify-self: center;
+.tk-intro-row {
+  width: 100%;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2101,18 +2086,9 @@ body:not(.tk-bar-hidden) .tk-pause {
   display: none;
 }
 
-.tk-barpause svg {
-  width: 22px;
-  height: 22px;
-}
-
-/* game: no accidental pinch-zoom on menus/overlays/dialogs (a child can get stuck zoomed in);
-   vertical scrolling of long screens still works */
+/* overlays/dialogs: <html class="g92-game"> (kit); the page itself and the appbar too */
 body.tk-body,
-body.tk-body g92-appbar,
-body.tk-body .g92-overlay,
-body.tk-body .g92-overlay__panel,
-body.tk-body dialog {
+body.tk-body g92-appbar {
   touch-action: pan-y;
 }
 

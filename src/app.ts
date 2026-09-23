@@ -3,7 +3,7 @@ import { FixedLoop } from './core/loop';
 import { Save } from './core/storage';
 import { Sound } from './audio/sound';
 import { SIM_DT } from './game/constants';
-import { levelById, LEVELS } from './game/levels';
+import { levelById, LEVELS, unlockedLevel } from './game/levels';
 import { Match, type ResultData, type RewardOption } from './game/match';
 import { BadgeTracker, type BadgeDef } from './game/badges';
 import { CampaignMode, DemoMode, DuelMode, SurvivalMode, TargetsMode, type DuelConfig } from './game/modes';
@@ -11,11 +11,14 @@ import type { BiomeId } from './game/types';
 import { BIOMES } from './game/biomes';
 import { Renderer } from './render/renderer';
 import { recordActivity } from './kit/activity';
-import { openDialog, openSettingsDialog } from './kit/dialog';
-import { plural } from './kit/cz';
+import { appbarPauseButton } from './kit/appbar';
+import { openDialog, setSettingsSection } from './kit/dialog';
 import { UI_ICONS } from './kit/dom';
+import { helpTitle } from './kit/help';
+import { LABEL_ICONS, LABELS } from './kit/labels';
+import { guardLeave } from './kit/nav';
 import { autoPause, showPause, showResults, showStart } from './kit/overlay';
-import { getSettings, prefersReducedMotion, setSettings, subscribeSettings } from './kit/settings';
+import { getPlayerName, getSettings, prefersReducedMotion, subscribeSettings } from './kit/settings';
 import { sfx } from './kit/sfx';
 import { toast } from './kit/toast';
 import { Hud } from './ui/hud';
@@ -54,9 +57,9 @@ export class App {
   private appbar: HTMLElement | null;
   /** Pause button in the appbar actions slot (family convention); the HUD one is used when the bar is hidden. */
   private barPause: HTMLButtonElement;
+  private soundOn = getSettings().sound;
   private lastAim = { angle: 0, power: 0, id: 0 };
   private resultTimer = 0;
-  private dialogOpen = false;
   private rotateTipShown = false;
   /** Badges earned during the current match (listed in its results); null outside a match. */
   private matchBadges: BadgeDef[] | null = null;
@@ -72,16 +75,8 @@ export class App {
     canvas: HTMLCanvasElement,
   ) {
     this.appbar = document.querySelector('g92-appbar');
-    this.barPause = document.createElement('button');
-    this.barPause.type = 'button';
-    this.barPause.slot = 'actions';
-    this.barPause.className = 'g92-btn g92-btn--ghost g92-btn--icon tk-barpause';
-    this.barPause.setAttribute('aria-label', 'Pauza (Esc)');
-    this.barPause.title = 'Pauza (Esc)';
-    this.barPause.innerHTML = UI_ICONS.pause;
+    this.barPause = appbarPauseButton(() => this.pause(), this.appbar);
     this.barPause.hidden = true;
-    this.barPause.addEventListener('click', () => this.pause());
-    this.appbar?.prepend(this.barPause);
     this.renderer = new Renderer(canvas);
     this.renderer.onHitStop = (s) => this.loop.hitStop(s);
     this.hud = new Hud(stage, this.input, {
@@ -119,7 +114,14 @@ export class App {
     this.resize();
 
     this.applyPrefs();
-    subscribeSettings(() => this.applyPrefs());
+    subscribeSettings((st) => {
+      this.applyPrefs();
+      if (st.sound !== this.soundOn) {
+        this.soundOn = st.sound;
+        // the appbar (and its M key) toggles sound; during play the bar may be hidden → short note in the HUD
+        if (this.state === 'play') this.hud.notify(st.sound ? 'Zvuk zapnut' : 'Zvuk vypnut', st.sound ? '🔊' : '🔇', 1200);
+      }
+    });
     matchMedia('(pointer: coarse)').matches && (document.documentElement.dataset.input = 'touch');
     window.addEventListener('touchstart', () => (document.documentElement.dataset.input = 'touch'), { passive: true, capture: true });
 
@@ -128,23 +130,16 @@ export class App {
       if (this.state === 'play') this.pause();
     });
 
-    this.appbar?.addEventListener('g92-help', () => this.openHelp());
-    // leave guard: "‹ Menu" during a running battle pauses and asks first (same dialog as the kit's
-    // confirmLeave; replaced by kit guardLeave once the appbar dispatches g92-back)
-    this.appbar?.addEventListener(
-      'click',
-      (e) => {
-        const back = e.composedPath().find((n) => n instanceof HTMLAnchorElement && n.classList.contains('back')) as HTMLAnchorElement | undefined;
-        if (!back || !this.inBattle()) return;
-        e.preventDefault();
-        e.stopPropagation();
-        void this.confirmLeave(back.href);
-      },
-      true,
-    );
-    this.appbar?.addEventListener('g92-settings', (e) => {
+    this.appbar?.addEventListener('g92-help', (e) => {
       e.preventDefault();
-      this.openSettings();
+      void this.openHelp();
+    });
+    // ⚙ always opens the kit settings dialog with the Tanky section (dialogs pause the game via autoPause)
+    setSettingsSection({ extra: () => settingsExtra(this.save, () => this.applyPrefsAndMatch()) });
+    // "Menu" (appbar, browser back/reload) during a running battle: pause + "Odejít do menu?"
+    guardLeave({
+      isActive: () => this.inBattle(),
+      onPause: () => this.pause(),
     });
     window.matchMedia('(max-height: 540px)').addEventListener('change', () => this.updateChrome());
   }
@@ -153,7 +148,13 @@ export class App {
     this.newDemo();
     this.loop.start();
     recordActivity('tanky', this.activity());
-    this.goHome();
+    this.openFromHash();
+    window.addEventListener('hashchange', () => {
+      if (location.hash && !this.inBattle()) {
+        this.closeOverlays();
+        this.openFromHash();
+      }
+    });
     if (!this.save.data.seenHelp) {
       this.save.data.seenHelp = true;
       this.save.commit('seenHelp');
@@ -234,7 +235,7 @@ export class App {
   }
 
   private playerName(): string {
-    return getSettings().playerName.trim() || 'Ty';
+    return getPlayerName('tanky').trim() || 'Ty';
   }
 
   // ---------------------------------------------------------------------------
@@ -247,7 +248,7 @@ export class App {
     const m = this.current;
     if (this.state === 'play' && this.match) {
       for (const p of presses) {
-        if (p === 'pause' || p === 'fullscreen' || p === 'mute' || p === 'help') continue;
+        if (p === 'pause' || p === 'help') continue;
         if (p === 'fire' && this.hud.pickerOpen) {
           this.hud.closePicker();
           continue;
@@ -299,29 +300,17 @@ export class App {
     this.hud.update();
   }
 
+  private get dialogOpen(): boolean {
+    return !!document.querySelector('dialog[open]');
+  }
+
   private globalPress(a: PressAction): void {
-    if (a === 'fullscreen') this.toggleFullscreen();
-    else if (a === 'mute') {
-      const on = !getSettings().sound;
-      setSettings({ sound: on });
-      if (this.state === 'play') this.hud.notify(on ? 'Zvuk zapnut' : 'Zvuk vypnut', on ? '🔊' : '🔇', 1200);
-      else toast(on ? 'Zvuk zapnut' : 'Zvuk vypnut', { icon: on ? UI_ICONS.soundOn : UI_ICONS.soundOff, duration: 1200 });
-    } else if (a === 'help') {
+    if (a === 'help') {
       if (!this.dialogOpen && (this.state === 'play' || this.state === 'menu')) this.openHelp();
     } else if (a === 'pause' && this.state === 'play' && !this.dialogOpen) {
       if (this.hud.pickerOpen) this.hud.closePicker();
       else this.pause();
     }
-  }
-
-  private toggleFullscreen(): void {
-    const d = document as Document & { webkitFullscreenElement?: Element; webkitExitFullscreen?: () => void };
-    const el = document.documentElement as HTMLElement & { webkitRequestFullscreen?: () => void };
-    const swallow = (p: unknown) => {
-      if (p && typeof (p as Promise<void>).catch === 'function') (p as Promise<void>).catch(() => undefined);
-    };
-    if (d.fullscreenElement ?? d.webkitFullscreenElement) swallow(document.exitFullscreen?.() ?? d.webkitExitFullscreen?.());
-    else swallow(el.requestFullscreen?.() ?? el.webkitRequestFullscreen?.());
   }
 
   // ---------------------------------------------------------------------------
@@ -356,12 +345,8 @@ export class App {
           void this.start({ mode: 'targets' });
           break;
         case 'stats': {
-          this.dialogOpen = true;
           const dlg = openDialog({ title: 'Odznaky a statistiky', icon: UI_ICONS.trophy, content: statsContent(this.save), wide: true, actions: [{ label: 'Zavřít', value: 'ok' }] });
-          void dlg.closed.then(() => {
-            this.dialogOpen = false;
-            this.goHome();
-          });
+          void dlg.closed.then(() => this.goHome());
           break;
         }
         case 'help':
@@ -400,45 +385,11 @@ export class App {
     return !!this.match && (this.state === 'play' || this.state === 'paused' || this.state === 'reward');
   }
 
-  private async confirmLeave(href: string): Promise<void> {
-    if (this.dialogOpen) return;
-    if (this.state === 'play') this.pause();
-    this.dialogOpen = true;
-    const msg = document.createElement('p');
-    msg.className = 'g92-muted';
-    msg.textContent = 'Rozehraná hra se neuloží.';
-    const d = openDialog({
-      title: 'Odejít do menu?',
-      icon: UI_ICONS.grid,
-      content: msg,
-      dismissValue: 'stay',
-      actions: [
-        { label: 'Odejít', value: 'leave', variant: 'secondary' },
-        { label: 'Zůstat', value: 'stay', variant: 'primary', autofocus: true, icon: UI_ICONS.play },
-      ],
-    });
-    const v = await d.closed;
-    this.dialogOpen = false;
-    if (v === 'leave') location.href = href;
-  }
-
   openHelp(): Promise<void> {
-    const wasPlaying = this.state === 'play';
-    if (wasPlaying) this.pause();
-    this.dialogOpen = true;
-    const d = openDialog({ title: 'Jak hrát', icon: UI_ICONS.help, content: helpContent(), wide: true, actions: [{ label: 'Rozumím', value: 'ok' }] });
-    return d.closed.then(() => {
-      this.dialogOpen = false;
-    });
-  }
-
-  private openSettings(): void {
+    if (this.dialogOpen) return Promise.resolve();
     if (this.state === 'play') this.pause();
-    this.dialogOpen = true;
-    const d = openSettingsDialog({ extra: settingsExtra(this.save, () => this.applyPrefsAndMatch()) });
-    void d.closed.then(() => {
-      this.dialogOpen = false;
-    });
+    const d = openDialog({ title: helpTitle('tanky'), icon: UI_ICONS.help, content: helpContent(), wide: true, actions: [{ label: LABELS.gotIt, value: 'ok' }] });
+    return d.closed.then(() => undefined);
   }
 
   private applyPrefsAndMatch(): void {
@@ -537,7 +488,7 @@ export class App {
     const back = document.createElement('button');
     back.type = 'button';
     back.className = 'g92-btn g92-btn--ghost g92-btn--sm tk-intro-back';
-    back.innerHTML = spec.mode === 'campaign' ? `${UI_ICONS.back}<span>Úrovně</span>` : `${UI_ICONS.home}<span>Domů</span>`;
+    back.innerHTML = spec.mode === 'campaign' ? `${UI_ICONS.back}<span>Úrovně</span>` : `${LABEL_ICONS.home}<span>${LABELS.home}</span>`;
     let backed = false;
     back.addEventListener('click', () => {
       backed = true;
@@ -599,7 +550,8 @@ export class App {
       });
     }
     // Inserted by hand (not via showStart({ extra })): the level info belongs under the title – in the
-    // left hero column on short landscape screens – and "Zpět" must sit below the main actions.
+    // left hero column on short landscape screens; the goal line right above the actions; "Úrovně"/"Domů"
+    // is the last button INSIDE the pinned actions (so it never scrolls under them).
     const view = p.el.querySelector('.g92-overlay__view');
     const actions = view?.querySelector('.g92-overlay__actions');
     const hero = view?.querySelector('.g92-overlay__hero');
@@ -609,7 +561,18 @@ export class App {
         else actions.parentElement.insertBefore(heroExtra, actions);
       }
       if (extra) actions.parentElement.insertBefore(extra, actions);
-      actions.parentElement.append(back);
+      // "Jak hrát" + "Úrovně"/"Domů" share one row under "Hrát" (keeps the pinned block short on phones)
+      const how = actions.querySelector(':scope > .g92-btn--secondary');
+      const row = document.createElement('div');
+      row.className = 'g92-overlay__row tk-intro-row';
+      if (how) {
+        how.classList.remove('g92-btn--block');
+        row.append(how);
+      }
+      back.classList.remove('g92-btn--sm');
+      back.classList.add('g92-btn--lg');
+      row.append(back);
+      actions.append(row);
     }
     this.track(p);
     return p.then((r) => (backed ? 'back' : (r?.difficulty ?? '')));
@@ -623,8 +586,7 @@ export class App {
     const info = m.mode.hud();
     const p = showPause({
       subtitle: info.title,
-      menuHref: null,
-      menuLabel: this.spec?.mode === 'campaign' ? 'Úrovně' : 'Domů',
+      quit: true,
       stats: info.counters.map((c) => ({ label: c.label, value: c.value })),
     });
     this.track(p);
@@ -633,10 +595,11 @@ export class App {
       this.overlays = this.overlays.filter((o) => o !== (p as unknown));
       if (choice === 'resume') this.setState('play');
       else if (choice === 'restart' && this.spec) void this.start(this.spec, false);
-      else if (choice === 'menu') {
+      else if (choice === 'quit') {
         if (this.spec?.mode === 'campaign') this.openCampaignFromGame();
         else this.goHome();
       }
+      // 'menu' → the kit navigates to /menu/ itself (explicit choice, no leave question)
     });
   }
 
@@ -771,20 +734,19 @@ export class App {
       const actions: { label: string; value: string; variant?: 'primary' | 'secondary' | 'ghost' | 'soft'; icon?: string }[] = [];
       // won a campaign level → the big button continues, replay is secondary
       const nextFirst = isCampaign && !!r.canNext;
-      if (nextFirst) actions.push({ label: 'Hrát znovu', value: 'retry', variant: 'secondary', icon: UI_ICONS.restart });
+      if (nextFirst) actions.push({ label: LABELS.again, value: 'retry', variant: 'secondary', icon: LABEL_ICONS.again });
+      // in-app way back (level map / Tanky home); the kit adds "Menu" (leaves the app) after it
+      actions.push(isCampaign ? { label: 'Úrovně', value: 'home', variant: 'ghost', icon: UI_ICONS.back } : { label: LABELS.home, value: 'home', variant: 'ghost', icon: LABEL_ICONS.home });
       const p = showResults({
         title: r.title,
         subtitle: r.subtitle,
         score: r.score,
-        scoreLabel: r.score !== undefined ? plural(r.score, 'bod', 'body', 'bodů') : undefined,
         best: r.score !== undefined ? best : undefined,
         isNewBest: isNewBest && (r.score ?? 0) > 0,
         stars: r.stars,
         stats: r.stats.map((s) => ({ label: s.label, value: s.value })),
-        againLabel: nextFirst ? 'Další úroveň' : 'Hrát znovu',
-        againIcon: nextFirst ? UI_ICONS.arrowRight : undefined,
-        menuHref: null,
-        menuLabel: isCampaign ? 'Úrovně' : 'Domů',
+        againLabel: nextFirst ? LABELS.next : LABELS.again,
+        againIcon: nextFirst ? LABEL_ICONS.next : LABEL_ICONS.again,
         actions,
         lost: r.won === false,
         extra,
@@ -800,22 +762,56 @@ export class App {
         if (choice === undefined || this.match !== m) return;
         if (choice === 'again' && nextFirst && m.mode instanceof CampaignMode) void this.start({ mode: 'campaign', level: m.mode.def.id + 1 });
         else if ((choice === 'again' || choice === 'retry') && this.spec) void this.start(this.spec, this.spec.mode === 'campaign');
-        else if (choice === 'menu') {
+        else if (choice === 'home') {
           if (isCampaign) this.openCampaignFromGame();
           else this.goHome();
         }
+        // 'menu' → the kit goes to /menu/
       });
     }, r.won === false ? 1300 : 1600);
   }
 
+  /** Menu "Pokračovat" card: stars (or best score), where to continue and a deep link straight there. */
   private activity() {
     const d = this.save.data;
     const stars = this.save.totalStars;
-    const levels = d.campaign.stars.filter((s) => s > 0).length;
+    const max = LEVELS.length * 3;
+    const done = d.campaign.stars.filter((s) => s > 0).length;
+    const next = unlockedLevel(d.campaign.stars);
+    const campaignDone = done >= LEVELS.length;
+    const bodu = ['bod', 'body', 'bodů'] as const;
     return {
-      metric: stars > 0 ? { label: 'Hvězdy', value: `${stars}/${LEVELS.length * 3}` } : d.survival.bestScore ? { label: 'Rekord', value: d.survival.bestScore } : undefined,
-      progress: stars > 0 ? stars / (LEVELS.length * 3) : undefined,
-      note: levels > 0 ? (levels >= LEVELS.length ? 'Tažení dokončeno!' : `Tažení: úroveň ${levels + 1}`) : undefined,
+      metric:
+        stars > 0
+          ? { value: stars, of: max, unit: ['hvězda', 'hvězdy', 'hvězd'] as const }
+          : d.survival.bestScore
+            ? { label: 'Přežití', value: d.survival.bestScore, unit: bodu }
+            : d.targets.bestScore
+              ? { label: 'Střelnice', value: d.targets.bestScore, unit: bodu }
+              : undefined,
+      progress: stars > 0 ? stars / max : undefined,
+      note: done > 0 ? (campaignDone ? 'Tažení dokončeno!' : `Tažení: úroveň ${next}`) : undefined,
+      href: done > 0 && !campaignDone ? `/tanky/#uroven-${next}` : undefined,
     };
   }
+
+  /** Deep links from the menu: #uroven-N (level intro, if unlocked) and #tazeni (level map). */
+  private openFromHash(): void {
+    const hash = location.hash;
+    if (hash) history.replaceState(null, '', location.pathname + location.search);
+    const lv = /^#uroven-(\d+)$/.exec(hash);
+    if (lv) {
+      const id = Number(lv[1]);
+      if (levelById(id) && id <= unlockedLevel(this.save.data.campaign.stars)) {
+        void this.start({ mode: 'campaign', level: id });
+        return;
+      }
+    }
+    if (hash === '#tazeni' || lv) {
+      this.openCampaign();
+      return;
+    }
+    this.goHome();
+  }
+
 }

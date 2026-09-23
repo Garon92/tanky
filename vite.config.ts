@@ -1,6 +1,6 @@
 import { defineConfig } from 'vitest/config';
 import { VitePWA } from 'vite-plugin-pwa';
-import { g92Pwa } from './src/kit/pwa.ts';
+import { g92NotFoundPage, g92Pwa } from './src/kit/pwa.ts';
 
 export default defineConfig({
   base: '/tanky/',
@@ -10,10 +10,10 @@ export default defineConfig({
   plugins: [
     VitePWA(
       g92Pwa('tanky', {
-        name: 'Tanky – tanková bitva',
         description: 'Zamiř, vystřel a přechytrač soupeře! Tažení, souboj až pro 4 hráče, přežití a střelnice.',
       }),
     ),
+    g92NotFoundPage('tanky'),
   ],
   test: {
     environment: 'node',

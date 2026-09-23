@@ -10,8 +10,6 @@ export type PressAction =
   | 'nextWeapon'
   | 'prevWeapon'
   | 'pause'
-  | 'fullscreen'
-  | 'mute'
   | 'help'
   | `weapon${number}`;
 
@@ -39,9 +37,7 @@ const PRESS_KEYS: Record<string, PressAction> = {
   KeyZ: 'prevWeapon',
   Escape: 'pause',
   KeyP: 'pause',
-  KeyF: 'fullscreen',
-  KeyM: 'mute',
-  KeyH: 'help',
+  KeyH: 'help', // M sound, F fullscreen, ? help: <g92-appbar keys>
 };
 
 export class Input {
@@ -71,7 +67,7 @@ export class Input {
     const press: PressAction | undefined =
       PRESS_KEYS[e.code] ?? (/^Digit[1-9]$/.test(e.code) ? (`weapon${e.code.slice(5)}` as PressAction) : undefined);
     // Global actions work everywhere (menus too) but only while no dialog input is focused.
-    if (press === 'fullscreen' || press === 'mute' || press === 'pause' || press === 'help') {
+    if (press === 'pause' || press === 'help') {
       if (!e.repeat) {
         this.pressed.push(press);
         this.onAnyPress?.(press);

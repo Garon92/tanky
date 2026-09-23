@@ -5,10 +5,11 @@ import type { RewardOption } from '../game/match';
 import { BADGES } from '../game/badges';
 import { TANK_KINDS, TEAM_COLORS, TEAM_NAMES } from '../game/tank';
 import { WEAPON_ORDER, WEAPONS } from '../game/weapons';
-import { clearActivity } from '../kit/activity';
 import { getApp } from '../kit/apps';
 import { confirmDialog } from '../kit/dialog';
 import { h, starsHTML, UI_ICONS } from '../kit/dom';
+import { DIFFICULTIES_3, LABEL_ICONS, LABELS } from '../kit/labels';
+import { resetApp } from '../kit/reset';
 import { sfx } from '../kit/sfx';
 import { ICON, PICKUP_ICONS, tankIcon, WEAPON_ICONS } from './icons';
 
@@ -183,7 +184,7 @@ export function showCampaign(save: Save): Screen<number | null> {
   const head = h(
     'div',
     { class: 'tk-head' },
-    btn('Domů', 'g92-btn--ghost g92-btn--sm tk-back', UI_ICONS.home, () => s.close(null)),
+    btn(LABELS.home, 'g92-btn--ghost g92-btn--sm tk-back', LABEL_ICONS.home, () => s.close(null)),
     h('h2', { class: 'tk-head__title' }, 'Tažení'),
     h('span', { class: 'tk-head__stars', html: `${ICON.star}<b>${save.totalStars}</b> / ${LEVELS.length * 3}` }),
   );
@@ -273,11 +274,9 @@ export function levelIntroExtra(lv: LevelDef): { info: HTMLElement; par: HTMLEle
   };
 }
 
-export const DIFFICULTIES: { id: Difficulty; label: string; icon: string; hint: string }[] = [
-  { id: 'easy', label: 'Lehká', icon: '🐢', hint: 'Nepřátelé často míjí' },
-  { id: 'normal', label: 'Normální', icon: '🐇', hint: 'Férový souboj' },
-  { id: 'hard', label: 'Těžká', icon: '🔥', hint: 'Míří velmi přesně' },
-];
+/** Family difficulty (kit DIFFICULTIES_3: Lehká 🐢 / Normální 🐇 / Těžká 🔥) with Tanky hints. */
+const DIFFICULTY_HINTS: Record<Difficulty, string> = { easy: 'Nepřátelé často míjí', normal: 'Férový souboj', hard: 'Míří velmi přesně' };
+export const DIFFICULTIES: { id: Difficulty; label: string; icon: string; hint: string }[] = DIFFICULTIES_3.map((d) => ({ ...d, hint: DIFFICULTY_HINTS[d.id] }));
 
 // -----------------------------------------------------------------------------
 // Duel setup
@@ -291,7 +290,7 @@ export function showDuelSetup(save: Save): Screen<DuelSetup | null> {
   const head = h(
     'div',
     { class: 'tk-head' },
-    btn('Domů', 'g92-btn--ghost g92-btn--sm tk-back', UI_ICONS.home, () => s.close(null)),
+    btn(LABELS.home, 'g92-btn--ghost g92-btn--sm tk-back', LABEL_ICONS.home, () => s.close(null)),
     h('h2', { class: 'tk-head__title' }, 'Souboj'),
     h('span'),
   );
@@ -304,7 +303,7 @@ export function showDuelSetup(save: Save): Screen<DuelSetup | null> {
     { v: 'off', label: 'Nehraje', icon: ICON.off },
   ];
   const slots = h('div', { class: 'tk-slots' });
-  const startBtn = btn('Hrát', 'g92-btn--xl g92-btn--block', UI_ICONS.play, () => {
+  const startBtn = btn(LABELS.play, 'g92-btn--xl g92-btn--block', LABEL_ICONS.play, () => {
     save.data.duel = cfg;
     save.commit('duel');
     s.close(cfg);
@@ -491,7 +490,9 @@ export function helpContent(): HTMLElement {
     [kbd('Tab') + ' ' + kbd('1') + '–' + kbd('9'), 'výběr zbraně'],
     [kbd('Shift'), 'jemné míření (drž)'],
     [kbd('Esc') + ' ' + kbd('P'), 'pauza'],
-    [kbd('F') + ' ' + kbd('M'), 'celá obrazovka / zvuk'],
+    [kbd('M'), 'zvuk zapnout / vypnout'],
+    [kbd('F'), 'celá obrazovka'],
+    [kbd('?') + ' ' + kbd('H'), 'nápověda'],
   ]) {
     keys.append(h('li', null, h('span', { class: 'g92-keys__keys', html: k as string }), h('span', null, t as string)));
   }
@@ -566,7 +567,7 @@ export function settingsExtra(save: Save, onChange: () => void): HTMLElement {
     void confirmDialog({ title: 'Smazat postup?', message: 'Opravdu smazat všechny hvězdy a rekordy v Tancích? Nejde to vrátit.', confirmLabel: 'Smazat', danger: true }).then((ok) => {
       if (!ok) return;
       save.resetAll();
-      clearActivity('tanky'); // the menu must not keep showing "Pokračovat · Tanky" with old stars
+      resetApp('tanky'); // all g92:tanky:* keys + the menu's "Pokračovat" entry
       sfx.error();
       onChange();
       window.setTimeout(() => location.reload(), 250);
