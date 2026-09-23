@@ -99,7 +99,10 @@ describe('world', () => {
     const { w, a } = arena();
     const c = w.spawnCrate(a.x + 60, 'repair');
     a.hp = 50;
-    settle(w);
+    // parachuting crates don't block the turn…
+    expect(w.isBusy()).toBe(false);
+    // …but they do land eventually
+    for (let i = 0; i < 120 * 15 && !c.landed; i++) w.update(SIM_DT);
     expect(c.landed).toBe(true);
     for (let i = 0; i < 200 && c.alive; i++) w.drive(a, 1, SIM_DT);
     expect(c.alive).toBe(false);

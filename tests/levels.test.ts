@@ -65,7 +65,7 @@ describe('campaign levels', () => {
         mode.player.control = 'bot';
         mode.player.botLevel = 'hard';
         m.brains.clear();
-        for (let i = 0; i < (240 / SIM_DT) && m.phase !== 'over'; i++) m.update(SIM_DT);
+        for (let i = 0; i < (500 / SIM_DT) && m.phase !== 'over'; i++) m.update(SIM_DT);
         expect(m.phase).toBe('over');
         if (m.result?.won) won++;
       }

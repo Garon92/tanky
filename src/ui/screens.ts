@@ -146,7 +146,7 @@ export function showHome(save: Save): Screen<HomeChoice> {
     card(
       'campaign',
       'Tažení',
-      stars === 0 ? '15 úrovní v 5 světech – začni tady!' : `Pokračuj úrovní ${nextLevel}: ${levelById(nextLevel)?.name ?? ''}`,
+      stars === 0 ? `${LEVELS.length} úrovní v ${WORLDS.length} světech – začni tady!` : `Pokračuj úrovní ${nextLevel}: ${levelById(nextLevel)?.name ?? ''}`,
       ICON.campaign,
       `${ICON.star}<b>${stars}</b>/${maxStars}`,
       '#ef5350',
@@ -507,7 +507,7 @@ export function helpContent(): HTMLElement {
   const modes = h(
     'ul',
     { class: 'tk-help__list' },
-    h('li', { html: `${ICON.campaign}<span><b>Tažení</b> – 15 úrovní. Čím méně výstřelů, tím víc hvězd.</span>` }),
+    h('li', { html: `${ICON.campaign}<span><b>Tažení</b> – ${LEVELS.length} úrovní v ${WORLDS.length} světech. Čím méně výstřelů, tím víc hvězd.</span>` }),
     h('li', { html: `${ICON.duel}<span><b>Souboj</b> – 2–4 hráči nebo boti na jedné klávesnici či tabletu. Hraje se na kola.</span>` }),
     h('li', { html: `${ICON.survival}<span><b>Přežití</b> – vlny nepřátel padají na padácích. Mezi vlnami si vybereš odměnu.</span>` }),
     h('li', { html: `${ICON.range}<span><b>Střelnice</b> – 12 ran na balónky, terče a UFO. Víc cílů jednou ranou = kombo!</span>` }),

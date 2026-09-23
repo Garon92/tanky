@@ -1,4 +1,4 @@
-import { LEVELS } from './levels';
+import { levelById, LEVELS } from './levels';
 import type { Match, ResultData } from './match';
 import type { WorldEvent } from './world';
 
@@ -21,7 +21,7 @@ export const BADGES: BadgeDef[] = [
   { id: 'first-win', name: 'První vítězství', desc: 'Vyhraj úroveň tažení.', icon: '🏅' },
   { id: 'perfect', name: 'Perfektní', desc: 'Získej v úrovni 3 hvězdy.', icon: '⭐' },
   { id: 'untouched', name: 'Nedotknutelný', desc: 'Vyhraj úroveň (od 2.) bez jediného zranění.', icon: '✨' },
-  { id: 'boss', name: 'Přemožitel generála', desc: 'Poraz Generála v poslední úrovni.', icon: '🎖️' },
+  { id: 'boss', name: 'Přemožitel generála', desc: 'Poraz obrovského Generála.', icon: '🎖️' },
   { id: 'campaign', name: 'Velitel', desc: 'Dokonči celé tažení.', icon: '🏆' },
   { id: 'all-stars', name: 'Hvězdný velitel', desc: `Posbírej všech ${LEVELS.length * 3} hvězd.`, icon: '🌟' },
   { id: 'duel-win', name: 'Vítěz souboje', desc: 'Vyhraj souboj proti botovi.', icon: '⚔️' },
@@ -116,7 +116,7 @@ export class BadgeTracker {
       this.give('first-win');
       if ((r.stars ?? 0) >= 3) this.give('perfect');
       if ((ctx.level ?? 0) >= 2 && ctx.damageTaken === 0) this.give('untouched');
-      if (ctx.level === LEVELS.length) this.give('boss');
+      if (ctx.level !== undefined && levelById(ctx.level)?.enemies.some((e) => e.kind === 'general')) this.give('boss');
       if (ctx.campaignDone) this.give('campaign');
       if (ctx.totalStars !== undefined && ctx.maxStars !== undefined && ctx.totalStars >= ctx.maxStars) this.give('all-stars');
     }

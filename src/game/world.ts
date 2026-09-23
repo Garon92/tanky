@@ -42,7 +42,7 @@ interface Pending {
 }
 
 const WOOD_SIZE = 30;
-const CRATE_FALL_SPEED = 70;
+const CRATE_FALL_SPEED = 95;
 
 export class World {
   terrain: Terrain;
@@ -239,7 +239,8 @@ export class World {
   isBusy(): boolean {
     if (this.projectiles.length > 0 || this.pending.length > 0) return true;
     for (const t of this.tanks) if (t.falling || (t.hp <= 0 && t.alive)) return true;
-    for (const c of this.crates) if (c.alive && !c.landed) return true;
+    // parachuting crates don't hold up the game – they may land during the next turn
+    for (const c of this.crates) if (c.alive && !c.landed && !c.chute) return true;
     for (const w of this.woods) if (w.alive && w.vy > 0) return true;
     return false;
   }
