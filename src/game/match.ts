@@ -361,6 +361,7 @@ export class Match {
     this.turn++;
     this.aimTouched.angle = false;
     this.aimTouched.power = false;
+    this.aimTouched.fired = false;
     // wind
     if (this.windRange > 0) {
       if (this.windMode === 'random') this.world.wind = this.rng.range(-this.windRange, this.windRange);

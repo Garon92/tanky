@@ -78,6 +78,8 @@ describe('match flow', () => {
     // dummy tank passes, so it's our turn again
     expect(m.isHumanTurn).toBe(true);
     expect(mode.player.shots).toBe(1);
+    // the shot missed → the tutorial tells how to correct it
+    if (mode.player.damageDealt === 0) expect(mode.hint()).toBe('adjust');
   });
 
   it('campaign level can be won and gives stars', () => {
