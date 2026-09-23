@@ -683,24 +683,18 @@ export class App {
             .join('')}</tbody>`;
         extra.append(table);
       }
+      // new badges sit under the title (hero column) – on landscape phones that keeps the buttons in view
+      let badgesEl: HTMLElement | null = null;
       if (newBadges.length) {
-        const wrap = document.createElement('div');
-        wrap.className = 'tk-newbadges';
-        wrap.setAttribute('aria-label', 'Nové odznaky');
+        badgesEl = document.createElement('div');
+        badgesEl.className = 'tk-newbadges';
+        badgesEl.setAttribute('aria-label', 'Nové odznaky');
         for (const b of newBadges) {
           const chip = document.createElement('div');
           chip.className = 'tk-newbadge';
           chip.innerHTML = `<span aria-hidden="true">${b.icon}</span>Nový odznak: ${b.name}`;
-          wrap.append(chip);
+          badgesEl.append(chip);
         }
-        if (extra) {
-          const both = document.createElement('div');
-          both.style.display = 'grid';
-          both.style.gap = 'var(--g92-space-3)';
-          both.style.width = '100%';
-          both.append(extra, wrap);
-          extra = both;
-        } else extra = wrap;
         setTimeout(() => sfx.coin(), 700);
       }
       const isCampaign = m.mode instanceof CampaignMode;
@@ -724,6 +718,12 @@ export class App {
         lost: r.won === false,
         extra,
       });
+      if (badgesEl) {
+        const hero = p.el.querySelector('.g92-overlay__hero');
+        const anchor = p.el.querySelector('.g92-overlay__stats, .g92-overlay__extra, .g92-overlay__actions');
+        if (hero) hero.append(badgesEl);
+        else anchor?.parentElement?.insertBefore(badgesEl, anchor);
+      }
       this.track(p);
       void p.then((choice) => {
         if (choice === undefined || this.match !== m) return;

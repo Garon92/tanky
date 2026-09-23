@@ -2004,7 +2004,24 @@ html[data-input='touch'] .tk-reward .g92-kbd {
   animation: g92-pop 600ms var(--g92-ease-spring) both;
 }
 
+@media (max-height: 560px) and (orientation: landscape) {
+  .tk-newbadges {
+    gap: 6px;
+  }
+  .tk-newbadge {
+    padding: 3px 10px 3px 6px;
+    font-size: var(--g92-fs-xs);
+  }
+}
+
 .tk-newbadge span {
   font-size: 1.3rem;
   font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', var(--g92-font);
+}
+
+/* touch-only devices: keyboard shortcuts are just noise in help (kit hides .g92-keys the same way) */
+@media not (any-pointer: fine) {
+  .tk-help__keys {
+    display: none;
+  }
 }

@@ -515,11 +515,14 @@ export function helpContent(): HTMLElement {
     h('li', { html: `${ICON.survival}<span><b>Přežití</b> – vlny nepřátel padají na padácích. Mezi vlnami si vybereš odměnu.</span>` }),
     h('li', { html: `${ICON.range}<span><b>Střelnice</b> – 12 ran na balónky, terče a UFO. Víc cílů jednou ranou = kombo!</span>` }),
   );
+  // hidden on touch-only devices (same rule as the kit's .g92-keys)
+  const keysSection = section('Klávesnice', keys, h('p', { class: 'g92-hint' }, 'Na tahu je vždy jen jeden tank, takže šipky i WASD ovládají toho, kdo je právě na řadě.'));
+  keysSection.classList.add('tk-help__keys');
   return h(
     'div',
     { class: 'tk-help' },
     section('Jak se hraje', steps),
-    section('Klávesnice', keys, h('p', { class: 'g92-hint' }, 'Na tahu je vždy jen jeden tank, takže šipky i WASD ovládají toho, kdo je právě na řadě.')),
+    keysSection,
     section('Dotyk, myš a gamepad', touch),
     section('Zbraně', weapons),
     section('Na bojišti', things),
