@@ -80,6 +80,33 @@ export class Terrain {
     return removed;
   }
 
+  /**
+   * Remove the vertical span [top, bottom] from every column in [x0, x1] once (tunnel collapse).
+   * Unlike overlapping craters this never double-counts, so a dug tunnel becomes a clean trench.
+   */
+  cutSpan(x0: number, x1: number, top: number, bottom: number, y1Top = top, y1Bottom = bottom): number {
+    // half-open column range so consecutive segments never cut the same column twice
+    const a = Math.max(0, Math.ceil(Math.min(x0, x1)));
+    const b = Math.min(this.w - 1, Math.ceil(Math.max(x0, x1)) - 1);
+    let removed = 0;
+    const span = x1 - x0 || 1;
+    for (let x = a; x <= b; x++) {
+      // interpolate the tunnel between its two end heights (no staircase)
+      const t = Math.min(1, Math.max(0, (x - x0) / span));
+      const tp = top + (y1Top - top) * t;
+      const bt = bottom + (y1Bottom - bottom) * t;
+      const surf = this.heights[x] as number;
+      const cut = bt - Math.max(surf, tp);
+      if (cut > 0) {
+        const next = Math.min(BEDROCK_Y, surf + cut);
+        removed += next - surf;
+        this.heights[x] = next;
+      }
+    }
+    if (removed > 0) this.version++;
+    return removed;
+  }
+
   /** Add a circle (ball) of dirt. Dirt that would float falls onto the surface below. */
   addDirt(cx: number, cy: number, r: number): number {
     const x0 = Math.max(0, Math.floor(cx - r));

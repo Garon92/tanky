@@ -97,6 +97,9 @@ export interface Projectile {
   rollV: number;
   rollSlow: number;
   digLeft: number;
+  /** Last x where the digger carved (NaN before the first dig). */
+  digLastX: number;
+  digLastY: number;
   age: number;
   portalCd: number;
   split: boolean;

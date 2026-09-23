@@ -74,6 +74,8 @@ export function makeProjectile(opts: {
     rollV: 0,
     rollSlow: 0,
     digLeft: def.digLen ?? 0,
+    digLastX: Number.NaN,
+    digLastY: 0,
     age: 0,
     portalCd: 0,
     split: !!opts.sub,

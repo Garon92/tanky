@@ -283,17 +283,21 @@ export function drawTerrain(ctx: CanvasRenderingContext2D, terrain: Terrain, bio
   ctx.fillRect(x0, BEDROCK_Y + 2, x1 - x0, bottom - BEDROCK_Y);
 
   // top layer where the ground is undisturbed; crater rims elsewhere
-  const undisturbed = (x: number) => {
-    const i = Math.max(0, Math.min(terrain.w - 1, Math.round(x)));
-    return (terrain.heights[i] as number) <= (terrain.original[i] as number) + 1.5;
-  };
+  // a column keeps its grass/snow only if neither it nor its close neighbours were dug out or buried
+  const changed = new Uint8Array(terrain.w);
+  for (let i = 0; i < terrain.w; i++) {
+    if (Math.abs((terrain.heights[i] as number) - (terrain.original[i] as number)) > 1.5) {
+      for (let k = Math.max(0, i - 3); k <= Math.min(terrain.w - 1, i + 3); k++) changed[k] = 1;
+    }
+  }
+  const undisturbed = (x: number) => changed[Math.max(0, Math.min(terrain.w - 1, Math.round(x)))] === 0;
   const runs: [number, number][] = [];
   let runStart: number | null = null;
   for (let x = Math.floor(x0); x <= x1; x++) {
     const ok = undisturbed(x);
     if (ok && runStart === null) runStart = x;
     if ((!ok || x === Math.floor(x1)) && runStart !== null) {
-      runs.push([runStart, x]);
+      if (x - runStart >= 6 || runStart <= x0 + 1) runs.push([runStart, x]);
       runStart = null;
     }
   }
@@ -311,20 +315,24 @@ export function drawTerrain(ctx: CanvasRenderingContext2D, terrain: Terrain, bio
   };
   strokeRuns(4, 9, biome.top);
   strokeRuns(1, 3, biome.topLight);
-  // crater rims (disturbed parts)
-  ctx.strokeStyle = 'rgba(0,0,0,0.22)';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  let inRim = false;
-  for (let x = Math.max(0, Math.floor(x0)); x <= Math.min(terrain.w - 1, x1); x += 2) {
-    if (!undisturbed(x)) {
-      const y = terrain.heightAt(x) + 1;
-      if (!inRim) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-      inRim = true;
-    } else inRim = false;
-  }
-  ctx.stroke();
+  // crater rims (disturbed parts): soft scorch + crisp dark edge
+  const rim = (width: number, color: string, dy: number) => {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.beginPath();
+    let inRim = false;
+    for (let x = Math.max(0, Math.floor(x0)); x <= Math.min(terrain.w - 1, x1); x += 2) {
+      if (!undisturbed(x)) {
+        const y = terrain.heightAt(x) + dy;
+        if (!inRim) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+        inRim = true;
+      } else inRim = false;
+    }
+    ctx.stroke();
+  };
+  rim(10, 'rgba(20,10,5,0.16)', 5);
+  rim(3, 'rgba(35,20,10,0.45)', 1.2);
 
   // decorations on undisturbed ground
   const deco = new Rng(seed ^ 0x9e3779b9);

@@ -379,7 +379,14 @@ export class World {
           this.splitCluster(p);
           break;
         case 'dig': {
-          this.terrain.crater(ev.x, ev.y, 13);
+          // tunnel collapses into a trench: each column loses the tunnel's height exactly once
+          const first = Number.isNaN(p.digLastX);
+          const from = first ? ev.x - 6 : p.digLastX;
+          const fromY = first ? ev.y : p.digLastY;
+          this.terrain.cutSpan(from, ev.x, fromY - 13, fromY + 13, ev.y - 13, ev.y + 13);
+          p.digLastX = ev.x;
+          p.digLastY = ev.y;
+          this.terrain.relax(Math.min(from, ev.x) - 3, Math.max(from, ev.x) + 3, 2);
           this.emit({ t: 'dig', x: ev.x, y: ev.y });
           break;
         }

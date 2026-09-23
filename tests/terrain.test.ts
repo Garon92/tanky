@@ -50,6 +50,21 @@ describe('Terrain', () => {
     expect(t2.heightAt(700)).toBe(600);
   });
 
+  it('a dug tunnel collapses into an even trench (no double counting)', () => {
+    const t = Terrain.flat(500);
+    // consecutive segments of a horizontal tunnel at depth 600 (shared boundary column is smoothed by relax)
+    t.cutSpan(100.3, 111.6, 587, 613);
+    t.cutSpan(111.6, 122.9, 587, 613);
+    t.cutSpan(122.9, 140.2, 587, 613);
+    for (let x = 101; x < 140; x++) expect(t.heights[x]).toBeCloseTo(526, 5);
+    // sloped tunnel is interpolated between its ends
+    const s = Terrain.flat(500);
+    s.cutSpan(200, 300, 480, 520, 580, 620);
+    expect(s.heights[200]).toBeCloseTo(520, 5);
+    expect(s.heights[299]).toBeCloseTo(540, 5);
+    expect(s.heights[300]).toBe(500); // half-open range: the end column belongs to the next segment
+  });
+
   it('flatten makes the pad level', () => {
     const t = generateTerrain(new Rng(1), 'hills');
     t.flatten(400, 450);
