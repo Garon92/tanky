@@ -26,8 +26,11 @@ Běží v prohlížeči na počítači, tabletu i mobilu (ideálně na šířku)
 | Jízda (palivo) | Q E | šipky u ukazatele paliva |
 | Zbraň | Tab, 1–9 | tlačítko zbraně vlevo dole |
 | Jemné míření | drž Shift | |
-| Pauza | Esc / P | ⏸ vlevo nahoře |
-| Celá obrazovka / zvuk | F / M | lišta nahoře |
+| Pauza | Esc / P | ⏸ v horní liště (na telefonu na šířku vlevo nahoře na bojišti) |
+| Celá obrazovka / zvuk / nápověda | F / M / ? (nebo H) | lišta nahoře |
+
+„‹ Menu“ během bitvy se nejdřív zeptá („Odejít do menu?“). Z menu vede „Pokračovat“ rovnou na další úroveň
+(`/tanky/#uroven-N`, mapa úrovní `/tanky/#tazeni`).
 
 Gamepad: levá páčka míří, A střílí, LB/RB mění zbraň, spouště jezdí, Start = pauza.
 
