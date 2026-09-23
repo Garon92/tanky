@@ -231,6 +231,7 @@ export class App {
     // round / match won → confetti from the survivors
     if ((m.phase === 'roundEnd' || m.phase === 'over') && phaseBefore !== m.phase && (m.mode.id === 'duel' || m.mode.id === 'campaign' || m.mode.id === 'demo')) {
       for (const t of m.world.tanks) if (t.alive && t.hp > 0 && (m.mode.id !== 'campaign' || t.team === 0)) this.renderer.fx.confetti(t.x, t.cy - 30, isDemo ? 24 : 50);
+      if (!isDemo && m.phase === 'roundEnd') sfx.success();
     }
     const slow = this.slowMo > 0 && !isDemo;
     this.loop.timeScale = slow ? 0.35 : this.fastPref && this.state === 'play' && !m.isHumanTurn ? 3 : 1;
