@@ -7,9 +7,10 @@ Běží v prohlížeči na počítači, tabletu i mobilu (ideálně na šířku)
 
 ## Režimy
 
-- **Tažení** – 15 ručně navržených úrovní v 5 světech (Louka, Poušť, Sníh, Noc, Měsíc a sopka).
+- **Tažení** – 20 ručně navržených úrovní v 6 světech (Louka, Poušť, Sníh, Noc, Měsíc a sopka, Výzvy).
   Hvězdičky za počet výstřelů, odemykání dalších úrovní, 3 obtížnosti. První úroveň je výuková.
-- **Souboj** – 2 až 4 tanky na jedné obrazovce; každý je hráč nebo bot (🐢 / 🐇 / 🔥).
+- **Souboj** – 2 až 4 tanky na jedné obrazovce; každý je hráč nebo bot (🐢 / 🐇 / 🔥), i ve dvou týmech
+  (🔴🟢 proti 🔵🟡 – rodič s dítětem proti botům).
   Nastavení: počet výher, životy (i klasický „jeden zásah“), vítr, bedny, odrazné okraje, prostředí.
   Pomocná čára pro každého hráče zvlášť – kdo vede, má ji kratší (handicap z původní hry).
 - **Přežití** – nekonečné vlny nepřátel na padácích, mezi vlnami výběr odměny, rekord.
@@ -35,6 +36,8 @@ Gamepad: levá páčka míří, A střílí, LB/RB mění zbraň, spouště jezd
 Střela, Velká bomba, Trojstřela, Skákačka, Válec, Ohňostroj, Krtek, Hlína, Chytrá raketa, Nálet, Megabomba.
 Terén je zničitelný (krátery, tanky padají), bedny s padákem dávají opravu, štít, palivo nebo zbraně.
 Překážky: kámen a kov (nezničitelné), dřevěné bedny, trampolíny, kouzelné brány, voda a láva, vítr.
+Přerušovaná čára ukazuje dráhu posledního výstřelu, tečky místa dopadu. Tahy botů jde zrychlit (⏩).
+19 odznaků a statistiky najdeš na úvodní obrazovce.
 
 ## Vývoj
 
