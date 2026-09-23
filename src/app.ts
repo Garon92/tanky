@@ -5,7 +5,7 @@ import { Sound } from './audio/sound';
 import { SIM_DT } from './game/constants';
 import { levelById, LEVELS } from './game/levels';
 import { Match, type ResultData, type RewardOption } from './game/match';
-import { BadgeTracker } from './game/badges';
+import { BadgeTracker, type BadgeDef } from './game/badges';
 import { CampaignMode, DemoMode, DuelMode, SurvivalMode, TargetsMode, type DuelConfig } from './game/modes';
 import type { BiomeId } from './game/types';
 import { BIOMES } from './game/biomes';
@@ -55,6 +55,7 @@ export class App {
   private resultTimer = 0;
   private dialogOpen = false;
   private rotateTipShown = false;
+  private badgeCollect: BadgeDef[] | null = null;
   /** Fast-forward opponents' turns (HUD toggle). */
   private fastPref = false;
   /** Remaining real seconds of slow motion (deciding blow). */
@@ -81,8 +82,12 @@ export class App {
       this.save.update('badges', (list) => {
         if (!list.includes(b.id)) list.push(b.id);
       });
-      toast(`Nový odznak: ${b.icon} ${b.name}`, { variant: 'success', icon: UI_ICONS.trophy, duration: 3200 });
-      sfx.coin();
+      // badges earned at the end of a game are shown inside the results panel instead of toasts
+      if (this.badgeCollect) this.badgeCollect.push(b);
+      else {
+        toast(`Nový odznak: ${b.icon} ${b.name}`, { variant: 'success', icon: UI_ICONS.trophy, duration: 3200 });
+        sfx.coin();
+      }
     });
     this.loop = new FixedLoop({ update: (dt) => this.update(dt), render: (dt) => this.render(dt) }, SIM_DT);
 
@@ -638,6 +643,8 @@ export class App {
     }
     // badges
     const player = m.world.tanks.find((t) => t.control === 'human');
+    this.badgeCollect = [];
+    const newBadges = this.badgeCollect;
     this.badges.result(r, m, {
       level: m.mode instanceof CampaignMode ? m.mode.def.id : undefined,
       totalStars: this.save.totalStars,
@@ -648,6 +655,7 @@ export class App {
       damageTaken: player?.damageTaken,
       vsBot: m.world.tanks.some((t) => t.control === 'bot'),
     });
+    this.badgeCollect = null;
     recordActivity('tanky', this.activity());
 
     this.resultTimer = window.setTimeout(() => {
@@ -664,6 +672,26 @@ export class App {
             .map((row) => `<tr><td><span class="tk-dot" style="--c:${row.color}"></span>${row.name}</td>${row.cells.map((c) => `<td>${c}</td>`).join('')}</tr>`)
             .join('')}</tbody>`;
         extra.append(table);
+      }
+      if (newBadges.length) {
+        const wrap = document.createElement('div');
+        wrap.className = 'tk-newbadges';
+        wrap.setAttribute('aria-label', 'Nové odznaky');
+        for (const b of newBadges) {
+          const chip = document.createElement('div');
+          chip.className = 'tk-newbadge';
+          chip.innerHTML = `<span aria-hidden="true">${b.icon}</span>Nový odznak: ${b.name}`;
+          wrap.append(chip);
+        }
+        if (extra) {
+          const both = document.createElement('div');
+          both.style.display = 'grid';
+          both.style.gap = 'var(--g92-space-3)';
+          both.style.width = '100%';
+          both.append(extra, wrap);
+          extra = both;
+        } else extra = wrap;
+        setTimeout(() => sfx.coin(), 700);
       }
       const isCampaign = m.mode instanceof CampaignMode;
       const actions: { label: string; value: string; variant?: 'primary' | 'secondary' | 'ghost' | 'soft'; icon?: string }[] = [];

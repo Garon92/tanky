@@ -1905,3 +1905,62 @@ html[data-input='touch'] .tk-reward .g92-kbd {
 .tk-slots.is-teams .tk-slot:nth-child(even) .tk-slot__head::after {
   content: 'TÝM 2';
 }
+
+/* ---- home: never wider than the phone ---- */
+.tk-screen--home .tk-panel {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.tk-modes > * {
+  min-width: 0;
+}
+
+.tk-home__foot {
+  flex-wrap: wrap;
+}
+
+.tk-home__foot > .g92-btn {
+  flex: 1 1 12rem;
+  max-width: 20rem;
+}
+
+.tk-hero__text {
+  min-width: 0;
+}
+
+@media (max-width: 480px) {
+  .tk-hero {
+    gap: var(--g92-space-3);
+  }
+  .tk-hero__title {
+    font-size: var(--g92-fs-4xl);
+  }
+}
+
+/* ---- new badges inside the results panel ---- */
+.tk-newbadges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--g92-space-2);
+  width: 100%;
+}
+
+.tk-newbadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px 6px 8px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--g92-gold) 18%, var(--g92-surface));
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--g92-gold) 50%, transparent);
+  font-weight: var(--g92-fw-bold);
+  font-size: var(--g92-fs-sm);
+  animation: g92-pop 600ms var(--g92-ease-spring) both;
+}
+
+.tk-newbadge span {
+  font-size: 1.3rem;
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', var(--g92-font);
+}
