@@ -277,6 +277,9 @@ export class Renderer {
     this.fx.drawTreads(ctx, w.terrain);
     this.flair.drawGround(ctx, this.flairCtx);
 
+    // bouncy world edges: glowing force fields
+    if (w.walls === 'bounce') this.drawBounceWalls(ctx);
+
     // level objects
     for (const b of w.blocks) drawBlock(ctx, b);
     for (const p of w.pads) drawPad(ctx, p, this.time);
@@ -407,6 +410,30 @@ export class Renderer {
       ctx.strokeStyle = col;
       ctx.lineWidth = 1.2;
       ctx.stroke();
+    }
+  }
+
+  private drawBounceWalls(ctx: CanvasRenderingContext2D): void {
+    const v = this.cam.view;
+    const top = Math.min(0, v.y0) - 20;
+    const h = WORLD_H - top;
+    for (const side of [0, 1]) {
+      const x = side === 0 ? 0 : WORLD_W;
+      const dir = side === 0 ? 1 : -1;
+      const g = ctx.createLinearGradient(x, 0, x + dir * 26, 0);
+      g.addColorStop(0, 'rgba(120,220,255,0.55)');
+      g.addColorStop(1, 'rgba(120,220,255,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(side === 0 ? 0 : WORLD_W - 26, top, 26, h);
+      ctx.strokeStyle = 'rgba(190,240,255,0.8)';
+      ctx.lineWidth = 3;
+      ctx.setLineDash([14, 10]);
+      ctx.lineDashOffset = -this.time * 40;
+      ctx.beginPath();
+      ctx.moveTo(x + dir * 2, top);
+      ctx.lineTo(x + dir * 2, WORLD_H);
+      ctx.stroke();
+      ctx.setLineDash([]);
     }
   }
 
