@@ -49,6 +49,7 @@ export class Renderer {
   onHitStop?: (s: number) => void;
   showLabels = true;
   private windDir = 1;
+  private wind = 0;
 
   constructor(readonly canvas: HTMLCanvasElement) {
     this.ctx = canvas.getContext('2d', { alpha: false }) as CanvasRenderingContext2D;
@@ -247,6 +248,7 @@ export class Renderer {
     this.syncFlairCtx(match);
     this.flair.update(fdt, this.flairCtx);
     this.windDir = w.wind < -5 ? -1 : 1;
+    this.wind = w.wind;
     this.ambient(biome, fdt);
     for (const t of w.tanks) {
       if (t.driving > 0 && fdt > 0 && Math.random() < 0.5) {
@@ -324,7 +326,7 @@ export class Renderer {
     const fx = this.fx;
     switch (b.ambient) {
       case 'snow':
-        if (Math.random() < dt * 30) fx.spawn('snow', rand(v.x0, v.x1), v.y0 - 10, rand(-20, 20), rand(30, 70), 16, rand(1.2, 2.8), '#ffffff', { drag: 0 });
+        if (Math.random() < dt * 30) fx.spawn('snow', rand(v.x0 - 200, v.x1 + 200), v.y0 - 10, rand(-20, 20) + this.wind * 0.5, rand(30, 70), 16, rand(1.2, 2.8), '#ffffff', { drag: 0 });
         break;
       case 'ash':
         if (Math.random() < dt * 14) fx.spawn('ember', rand(v.x0, v.x1), WORLD_H + 10, rand(-15, 15), rand(-60, -25), rand(4, 9), rand(1.5, 2.8), '', {});

@@ -56,6 +56,8 @@ export class App {
   private rotateTipShown = false;
   /** Fast-forward opponents' turns (HUD toggle). */
   private fastPref = false;
+  /** Remaining real seconds of slow motion (deciding blow). */
+  private slowMo = 0;
 
   constructor(
     private stage: HTMLElement,
@@ -212,8 +214,8 @@ export class App {
       this.match.applyHumanInput(this.input, dt);
     }
     const run = this.state === 'menu' || this.state === 'play' || this.state === 'results';
+    const phaseBefore = m.phase;
     if (run) m.update(dt);
-    this.loop.timeScale = this.fastPref && this.state === 'play' && !m.isHumanTurn ? 3 : 1;
     // events → visuals & sound
     const isDemo = m === this.demo;
     for (const e of m.drainEvents()) {
@@ -221,8 +223,16 @@ export class App {
       if (!isDemo) {
         this.sound.handle(e);
         this.badges.event(e, m);
+        // the deciding blast plays in slow motion
+        if (e.t === 'death' && m.mode.decided()) this.slowMo = 1.1;
       }
     }
+    // round / match won → confetti from the survivors
+    if ((m.phase === 'roundEnd' || m.phase === 'over') && phaseBefore !== m.phase && (m.mode.id === 'duel' || m.mode.id === 'campaign' || m.mode.id === 'demo')) {
+      for (const t of m.world.tanks) if (t.alive && t.hp > 0 && (m.mode.id !== 'campaign' || t.team === 0)) this.renderer.fx.confetti(t.x, t.cy - 30, isDemo ? 24 : 50);
+    }
+    const slow = this.slowMo > 0 && !isDemo;
+    this.loop.timeScale = slow ? 0.35 : this.fastPref && this.state === 'play' && !m.isHumanTurn ? 3 : 1;
     if (!isDemo && this.state === 'play') {
       const t = m.active;
       this.sound.drive(!!t && t.driving > 0 && m.isHumanTurn);
@@ -238,6 +248,7 @@ export class App {
   }
 
   private render(dt: number): void {
+    if (this.slowMo > 0) this.slowMo = Math.max(0, this.slowMo - dt);
     const m = this.current;
     this.renderer.showLabels = this.state !== 'menu';
     this.renderer.draw(m, dt, this.state === 'paused');
@@ -261,8 +272,11 @@ export class App {
   private toggleFullscreen(): void {
     const d = document as Document & { webkitFullscreenElement?: Element; webkitExitFullscreen?: () => void };
     const el = document.documentElement as HTMLElement & { webkitRequestFullscreen?: () => void };
-    if (d.fullscreenElement ?? d.webkitFullscreenElement) void (document.exitFullscreen?.() ?? d.webkitExitFullscreen?.());
-    else void (el.requestFullscreen?.() ?? el.webkitRequestFullscreen?.());
+    const swallow = (p: unknown) => {
+      if (p && typeof (p as Promise<void>).catch === 'function') (p as Promise<void>).catch(() => undefined);
+    };
+    if (d.fullscreenElement ?? d.webkitFullscreenElement) swallow(document.exitFullscreen?.() ?? d.webkitExitFullscreen?.());
+    else swallow(el.requestFullscreen?.() ?? el.webkitRequestFullscreen?.());
   }
 
   // ---------------------------------------------------------------------------
