@@ -30,6 +30,13 @@ describe('campaign levels', () => {
     expect(def.tip.length).toBeGreaterThan(10);
   });
 
+  it('tanks start on the ground, not on roofs (level 10 bunker)', () => {
+    const { world, enemies } = buildLevel(levelById(10)!, 'normal', 'Test');
+    const roof = Math.min(...world.blocks.map((b) => b.y));
+    expect(enemies[0]!.y).toBeGreaterThan(roof + 100);
+    expect(Math.abs(enemies[0]!.y - world.terrain.heightAt(enemies[0]!.x))).toBeLessThan(2);
+  });
+
   it('unlocks one level past the furthest completed one', () => {
     expect(unlockedLevel([])).toBe(1);
     expect(unlockedLevel([3, 1])).toBe(3);

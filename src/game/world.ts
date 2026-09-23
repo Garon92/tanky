@@ -131,7 +131,8 @@ export class World {
   }
 
   placeOnGround(t: Tank): void {
-    t.y = this.groundAt(t.x, -Infinity);
+    // stand on the terrain (or a low platform on it) – never on a roof high above the ground
+    t.y = this.groundAt(t.x, this.terrain.heightAt(t.x) - 40);
     t.tilt = this.slopeTilt(t);
     t.vy = 0;
     t.falling = false;
