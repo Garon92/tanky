@@ -116,6 +116,7 @@ export function randomMap(o: RandomMapOptions): { world: World; spawns: number[]
       spawns[i] = clamp(x, 60, WORLD_W - 60);
     }
   }
+  for (let i = 0; i < spawns.length; i++) spawns[i] = flattestNear(terrain, spawns[i] as number, 70, waterY);
   for (const x of spawns) terrain.flatten(x - 26, x + 26, 16);
   const windMax = o.wind === 'strong' ? WIND_STRONG : o.wind === 'weak' ? WIND_WEAK : 0;
   const world = new World(terrain, {
@@ -136,6 +137,24 @@ export function randomMap(o: RandomMapOptions): { world: World; spawns: number[]
     else world.addGroundBlock(mid - 16, 32, rng.range(60, 120), rng.chance(0.5) ? 'stone' : 'metal');
   }
   return { world, spawns, rng };
+}
+
+/** Most level spot within ±range of x (keeps tanks off cliffs and out of water). */
+export function flattestNear(terrain: Terrain, x: number, range: number, waterY: number | null = null): number {
+  let best = x;
+  let bestScore = Infinity;
+  for (let cx = Math.max(60, x - range); cx <= Math.min(terrain.w - 60, x + range); cx += 5) {
+    const l = terrain.heightAt(cx - 26);
+    const r = terrain.heightAt(cx + 26);
+    const c = terrain.heightAt(cx);
+    let score = Math.abs(r - l) + Math.abs(c - (l + r) / 2) * 1.5 + Math.abs(cx - x) * 0.08;
+    if (waterY !== null && c > waterY - 14) score += 1000;
+    if (score < bestScore) {
+      bestScore = score;
+      best = cx;
+    }
+  }
+  return best;
 }
 
 export function windMaxFor(w: 'off' | 'weak' | 'strong'): number {

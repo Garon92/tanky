@@ -2,7 +2,7 @@ import { clamp } from '../core/math';
 import type { DuelSlotSave } from '../core/storage';
 import { WORLD_W } from './constants';
 import { levelById, LEVELS, starsFor, type LevelDef } from './levels';
-import { buildLevel, randomMap, windMaxFor } from './mapgen';
+import { buildLevel, flattestNear, randomMap, windMaxFor } from './mapgen';
 import { Mode, type HudInfo, type ResultData, type RewardOption, type TurnOutcome } from './match';
 import { Tank, TEAM_COLORS, TEAM_NAMES } from './tank';
 import type { BiomeId, BotLevel, TankKind, Target, TargetKind, WeaponId } from './types';
@@ -73,10 +73,10 @@ export class CampaignMode extends Mode {
       stars,
       canNext: won && this.def.id < LEVELS.length,
       stats: [
-        { label: 'Výstřely', value: `${shots} (na 3 ★ stačí ${this.def.par})` },
-        { label: 'Zásahy', value: `${this.player.hits} z ${shots}` },
-        { label: 'Způsobené poškození', value: String(this.player.damageDealt) },
-        { label: 'Zbylé životy', value: `${Math.max(0, Math.round(this.player.hp))} / ${this.player.maxHp}` },
+        { label: 'Výstřely', value: String(shots) },
+        { label: 'Na ★★★', value: `≤ ${this.def.par}` },
+        { label: 'Zásahy', value: `${this.player.hits}/${shots}` },
+        { label: 'Životy', value: `${Math.max(0, Math.round(this.player.hp))}` },
       ],
     };
   }
@@ -342,7 +342,7 @@ export class SurvivalMode extends Mode {
     const biome = biomes[this.biomeIdx % biomes.length] as BiomeId;
     this.biomeIdx++;
     const { world, spawns } = randomMap({ biome, slots: 1, wind: 'weak', seed: this.match.rng.int(0, 1e9), obstacles: false });
-    this.player.x = clamp((spawns[0] as number) + this.match.rng.range(0, 500), 120, WORLD_W - 120);
+    this.player.x = flattestNear(world.terrain, clamp((spawns[0] as number) + this.match.rng.range(0, 500), 120, WORLD_W - 120), 90, world.waterY);
     this.player.alive = true;
     world.terrain.flatten(this.player.x - 26, this.player.x + 26, 16);
     world.addTank(this.player);
@@ -373,6 +373,7 @@ export class SurvivalMode extends Mode {
       let x = 0;
       for (let tries = 0; tries < 50; tries++) {
         x = this.match.rng.range(80, WORLD_W - 80);
+        x = flattestNear(world.terrain, x, 50, world.waterY);
         if (Math.abs(x - this.player.x) > 280 && xs.every((o) => Math.abs(o - x) > 130)) break;
       }
       xs.push(x);
@@ -540,7 +541,7 @@ export class TargetsMode extends Mode {
   start(): void {
     const biome = this.match.rng.pick<BiomeId>(['meadow', 'desert', 'snow', 'night']);
     const { world } = randomMap({ biome, slots: 1, wind: 'off', seed: this.match.rng.int(0, 1e9), style: this.match.rng.pick(['hills', 'valley', 'dunes'] as const) });
-    const x = this.match.rng.chance(0.5) ? 170 : WORLD_W - 170;
+    const x = flattestNear(world.terrain, this.match.rng.chance(0.5) ? 170 : WORLD_W - 170, 80, world.waterY);
     world.terrain.flatten(x - 26, x + 26, 16);
     this.player = world.addTank(new Tank({ x, team: 0, kind: 'player', control: 'human', name: this.playerName || 'Ty', color: TEAM_COLORS[0] }));
     this.player.inventory = { shell: INFINITE, triple: 2, bouncer: 2, cluster: 1 };

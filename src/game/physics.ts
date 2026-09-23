@@ -282,7 +282,7 @@ export function stepProjectile(p: Projectile, env: PhysEnv, dt: number, trail = 
         const nyn = -1 / len;
         p.x = cx;
         p.y = env.terrain.heightAt(cx) - p.r - 1;
-        reflect(p, nxn, nyn, 0.72, 0.92);
+        reflect(p, nxn, nyn, 0.62, 0.8);
         p.bounces--;
         if (Math.hypot(p.vx, p.vy) < 70) return explode(p.x, p.y);
         return { t: 'bounce', x: p.x, y: p.y, on: 'terrain' };

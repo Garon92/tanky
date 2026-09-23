@@ -112,6 +112,12 @@ export class Hud {
     );
   }
 
+  /** Height of the control dock in CSS px (for camera insets on portrait screens). */
+  dockHeight(): number {
+    const c = this.dock.querySelector('.tk-controls') as HTMLElement | null;
+    return (c?.offsetHeight ?? 0) + 12;
+  }
+
   show(match: Match): void {
     this.match = match;
     this.el.hidden = false;
@@ -155,6 +161,7 @@ export class Hud {
     const w = m.world;
     const mode = m.mode;
     const hud = mode.hud();
+    this.set('dockh', String(this.dock.offsetHeight), (v) => this.el.style.setProperty('--dock-h', `${v}px`));
 
     // players strip (rebuilt when the tank list changes)
     const tanks = this.stripTanks(m);

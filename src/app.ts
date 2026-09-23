@@ -50,6 +50,7 @@ export class App {
   private lastAim = { angle: 0, power: 0, id: 0 };
   private resultTimer = 0;
   private dialogOpen = false;
+  private rotateTipShown = false;
 
   constructor(
     private stage: HTMLElement,
@@ -112,6 +113,17 @@ export class App {
   private resize(): void {
     const r = this.stage.getBoundingClientRect();
     const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    // Portrait: keep the battlefield between the HUD bars instead of under them.
+    const portrait = r.height > r.width * 1.05;
+    const playing = this.state === 'play' || this.state === 'paused' || this.state === 'reward' || this.state === 'results';
+    const cam = this.renderer.cam;
+    if (portrait) {
+      cam.insetTop = 96;
+      cam.insetBottom = playing ? Math.max(150, this.hud.dockHeight() + 20) : r.height * 0.18;
+    } else {
+      cam.insetTop = 0;
+      cam.insetBottom = 0;
+    }
     this.renderer.resize(r.width, r.height, dpr);
   }
 
@@ -388,6 +400,10 @@ export class App {
     this.hud.show(m);
     this.setState('play');
     this.lastAim.id = 0;
+    if (!this.rotateTipShown && window.innerHeight > window.innerWidth * 1.1 && window.innerWidth < 700) {
+      this.rotateTipShown = true;
+      toast('Tip: otoč zařízení na šířku – bojiště bude větší.', { icon: UI_ICONS.restart, duration: 4500 });
+    }
     if (spec.mode === 'campaign') {
       this.save.update('campaign', (c) => (c.last = spec.level));
       const lv = levelById(spec.level);

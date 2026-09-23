@@ -67,7 +67,7 @@ export const LEVELS: LevelDef[] = [
     name: 'Dva na jednoho',
     biome: 'meadow',
     intro: 'Dva kadeti na kopcích. Uprostřed leží bedna s dárkem.',
-    tip: 'Sestřel nebo přejeď bednu a dostaneš odměnu. Jezdit můžeš klávesami Q a E.',
+    tip: 'Sestřel nebo přejeď bednu a dostaneš odměnu. Jezdí se šipkami u paliva (nebo klávesami Q a E).',
     terrain: { pts: [[0, 560], [330, 600], [700, 650], [1000, 570], [1240, 470], [1600, 520]], noise: 6, seed: 33 },
     player: { x: 200, weapons: { shell: 999, triple: 2 } },
     enemies: [

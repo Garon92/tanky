@@ -5,6 +5,7 @@ import type { RewardOption } from '../game/match';
 import { TANK_KINDS, TEAM_COLORS, TEAM_NAMES } from '../game/tank';
 import { WEAPON_ORDER, WEAPONS } from '../game/weapons';
 import { getApp } from '../kit/apps';
+import { confirmDialog } from '../kit/dialog';
 import { h, starsHTML, UI_ICONS } from '../kit/dom';
 import { sfx } from '../kit/sfx';
 import { ICON, PICKUP_ICONS, tankIcon, WEAPON_ICONS } from './icons';
@@ -324,8 +325,20 @@ export function showDuelSetup(save: Save): Screen<DuelSetup | null> {
       { v: 'open' as const, label: 'Otevřené' },
       { v: 'bounce' as const, label: 'Odrazné' },
     ], (v) => (cfg.walls = v)),
-    option('Prostředí', cfg.biome, [{ v: 'random', label: '🎲 Náhodně' }, ...BIOME_ORDER.map((b) => ({ v: b as string, label: BIOMES[b].name }))], (v) => (cfg.biome = v)),
   );
+  // environment: chips that wrap (7 options don't fit a segmented control)
+  const biomeChips = h('div', { class: 'tk-chips', role: 'radiogroup', 'aria-label': 'Prostředí' });
+  const biomeOpts = [{ v: 'random', label: '🎲 Náhodně', sky: '' }, ...BIOME_ORDER.map((b) => ({ v: b as string, label: BIOMES[b].name, sky: BIOMES[b].sky[0] }))];
+  for (const o of biomeOpts) {
+    const b = h('button', { type: 'button', class: 'g92-chip tk-biome-chip', 'aria-pressed': String(cfg.biome === o.v), style: o.sky ? `--sky:${o.sky}` : '' }, o.label);
+    b.addEventListener('click', () => {
+      cfg.biome = o.v;
+      sfx.click();
+      for (const x of biomeChips.querySelectorAll('button')) x.setAttribute('aria-pressed', String(x === b));
+    });
+    biomeChips.append(b);
+  }
+  opts.append(h('div', { class: 'g92-field tk-opt tk-opt--wide' }, h('span', { class: 'g92-label' }, 'Prostředí'), biomeChips));
   s.panel.append(head, h('span', { class: 'g92-eyebrow' }, 'Kdo hraje'), slots, h('span', { class: 'g92-eyebrow' }, 'Pravidla'), opts, warn, h('div', { class: 'g92-overlay__actions' }, startBtn));
   refresh();
   focusFirst(s.panel);
@@ -390,7 +403,14 @@ export function helpContent(): HTMLElement {
       ['💥', 'Vystřel a sleduj, kam střela letí.'],
       ['🔴', 'Barevná tečka ukáže, kam jsi dopadl – příště se oprav.'],
       ['🏆', 'Zničíš všechny nepřátele = vyhráváš!'],
-    ].map(([icon, text], i) => h('li', { class: 'g92-howto__step', style: `--i:${i}` }, h('span', { class: 'g92-howto__icon', 'aria-hidden': 'true' }, icon as string), h('span', { class: 'g92-howto__text' }, text as string))),
+    ].map(([icon, text], i) =>
+      h(
+        'li',
+        { class: 'g92-howto__step', style: `--i:${i}` },
+        h('span', { class: 'g92-howto__icon', 'aria-hidden': 'true', html: `<span class="g92-emoji">${icon as string}</span>` }),
+        h('span', { class: 'g92-howto__text' }, text as string),
+      ),
+    ),
   );
   const keys = h('ul', { class: 'g92-keys' });
   for (const [k, t] of [
@@ -470,11 +490,12 @@ export function settingsExtra(save: Save, onChange: () => void): HTMLElement {
     return h('div', { class: 'g92-field' }, h('span', { class: 'g92-label' }, label), g, hint ? h('span', { class: 'g92-hint' }, hint) : null);
   };
   const reset = btn('Smazat postup a rekordy', 'g92-btn--ghost g92-btn--sm', UI_ICONS.restart, () => {
-    if (window.confirm('Opravdu smazat všechny hvězdy a rekordy v Tancích?')) {
+    void confirmDialog({ title: 'Smazat postup?', message: 'Opravdu smazat všechny hvězdy a rekordy v Tancích? Nejde to vrátit.', confirmLabel: 'Smazat', danger: true }).then((ok) => {
+      if (!ok) return;
       save.resetAll();
       onChange();
       sfx.error();
-    }
+    });
   });
   return h(
     'div',

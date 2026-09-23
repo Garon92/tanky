@@ -17,16 +17,20 @@ export class Camera {
   private t = 0;
   enabled = true;
 
+  /** Screen space (CSS px) reserved for HUD at the top / bottom – used on tall (portrait) screens. */
+  insetTop = 0;
+  insetBottom = 0;
+
   resize(cssW: number, cssH: number, dpr: number): void {
     this.cssW = Math.max(1, cssW);
     this.cssH = Math.max(1, cssH);
     this.dpr = dpr;
-    // leave a little headroom above the world when the screen is tall (sky), otherwise fit
-    this.scale = Math.min(this.cssW / WORLD_W, this.cssH / WORLD_H);
+    const availH = Math.max(1, this.cssH - this.insetTop - this.insetBottom);
+    this.scale = Math.min(this.cssW / WORLD_W, availH / WORLD_H);
     this.offX = (this.cssW - WORLD_W * this.scale) / 2;
-    // anchor the world to the bottom: extra space goes to the sky
-    this.offY = this.cssH - WORLD_H * this.scale;
-    if (this.offY > 0 && this.cssH / this.cssW < 0.9) this.offY = (this.cssH - WORLD_H * this.scale) * 0.75;
+    // anchor the world to the bottom of the free area: extra space goes to the sky
+    this.offY = this.cssH - this.insetBottom - WORLD_H * this.scale;
+    if (this.insetBottom === 0 && this.offY > 0 && this.cssH / this.cssW < 0.9) this.offY = (this.cssH - WORLD_H * this.scale) * 0.75;
   }
 
   addTrauma(amount: number): void {

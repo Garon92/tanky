@@ -48,6 +48,7 @@ export class Renderer {
   /** Called when the renderer wants the camera to shake / the loop to hit-stop. */
   onHitStop?: (s: number) => void;
   showLabels = true;
+  private windDir = 1;
 
   constructor(readonly canvas: HTMLCanvasElement) {
     this.ctx = canvas.getContext('2d', { alpha: false }) as CanvasRenderingContext2D;
@@ -128,8 +129,8 @@ export class Renderer {
         const t = e.tank;
         if (e.amount > 0) {
           const big = e.amount >= 40;
-          fx.text(t.x, t.cy - 30 * t.scale, `−${e.amount}`, big ? '#ffd54a' : '#ffffff', big ? 30 : 24, 1.4, 'rgba(120,0,0,0.75)');
-          if (e.direct) fx.text(t.x, t.cy - 62 * t.scale, 'Přímý zásah!', '#ff8a65', 18, 1.3);
+          fx.text(t.x + 34 * t.scale, t.cy - 34 * t.scale, `−${e.amount}`, big ? '#ffd54a' : '#ffffff', big ? 30 : 24, 1.4, 'rgba(120,0,0,0.75)');
+          if (e.direct) fx.text(t.x, t.cy - 100 * t.scale, 'Přímý zásah!', '#ffab91', 18, 1.3, 'rgba(90,20,0,0.75)');
         }
         if (e.absorbed > 0) {
           fx.text(t.x + 24, t.cy - 40, `🛡 ${e.absorbed}`, '#8fe3ff', 18, 1.1);
@@ -212,6 +213,7 @@ export class Renderer {
     this.fx.update(fdt, w.terrain);
     this.syncFlairCtx(match);
     this.flair.update(fdt, this.flairCtx);
+    this.windDir = w.wind < -5 ? -1 : 1;
     this.ambient(biome, fdt);
     for (const t of w.tanks) {
       if (t.driving > 0 && fdt > 0 && Math.random() < 0.5) {
@@ -290,9 +292,12 @@ export class Renderer {
       case 'ash':
         if (Math.random() < dt * 14) fx.spawn('ember', rand(v.x0, v.x1), WORLD_H + 10, rand(-15, 15), rand(-60, -25), rand(4, 9), rand(1.5, 2.8), '', {});
         break;
-      case 'dust':
-        if (Math.random() < dt * 4) fx.spawn('dust', rand(v.x0, v.x1), rand(300, 700), rand(20, 60), rand(-5, 5), rand(2, 4), rand(10, 26), '230,200,150', { grow: 6 });
+      case 'dust': {
+        // wind-blown sand specks
+        const dir = this.windDir || 1;
+        if (Math.random() < dt * 22) fx.spawn('snow', dir > 0 ? v.x0 - 5 : v.x1 + 5, rand(250, 780), dir * rand(160, 280), rand(-12, 12), 9, rand(0.8, 1.6), '#f3d9a4', {});
         break;
+      }
       case 'pollen':
         if (Math.random() < dt * 3) fx.spawn('glow', rand(v.x0, v.x1), rand(250, 650), rand(-10, 10), rand(-8, 4), rand(4, 8), rand(2, 4), '255,250,200', {});
         break;

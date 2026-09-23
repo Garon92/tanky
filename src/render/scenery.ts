@@ -17,7 +17,7 @@ export class Backdrop {
   private key = '';
 
   get(biome: Biome, cam: Camera, seed: number): HTMLCanvasElement {
-    const key = `${biome.id}|${cam.cssW}x${cam.cssH}@${cam.dpr}|${seed}`;
+    const key = `${biome.id}|${cam.cssW}x${cam.cssH}@${cam.dpr}|${seed}|${cam.offY.toFixed(1)}|${cam.scale.toFixed(4)}`;
     if (this.canvas && key === this.key) return this.canvas;
     this.key = key;
     const c = this.canvas && this.canvas.width === Math.round(cam.cssW * cam.dpr) && this.canvas.height === Math.round(cam.cssH * cam.dpr) ? this.canvas : makeCanvas(cam.cssW * cam.dpr, cam.cssH * cam.dpr);
@@ -182,7 +182,7 @@ export class TerrainLayer {
   private key = '';
 
   get(terrain: Terrain, biome: Biome, cam: Camera, seed: number): HTMLCanvasElement {
-    const key = `${terrain.version}|${biome.id}|${cam.cssW}x${cam.cssH}@${cam.dpr}|${seed}|${terrain.heights.length}`;
+    const key = `${terrain.version}|${biome.id}|${cam.cssW}x${cam.cssH}@${cam.dpr}|${seed}|${terrain.heights.length}|${cam.offY.toFixed(1)}|${cam.scale.toFixed(4)}`;
     if (this.canvas && key === this.key && this.lastTerrain === terrain) return this.canvas;
     this.key = key;
     this.lastTerrain = terrain;
