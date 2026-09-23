@@ -124,6 +124,21 @@ export function timeAgo(ts: number, now: number = Date.now()): string {
   return years === 1 ? 'před rokem' : `před ${years} lety`;
 }
 
+/** Compact variant for tight spots: "teď", "před 5 min", "před 3 h", "včera", "před 4 dny", "12. 9." */
+export function timeAgoShort(ts: number, now: number = Date.now()): string {
+  const diff = Math.max(0, now - ts);
+  const min = Math.floor(diff / 60000);
+  if (min < 1) return 'teď';
+  if (min < 60) return `před ${min} min`;
+  const dayStart = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const days = Math.round((dayStart(new Date(now)) - dayStart(new Date(ts))) / 86400000);
+  if (days === 0) return `před ${Math.floor(min / 60)} h`;
+  if (days === 1) return 'včera';
+  if (days < 7) return `před ${days} dny`;
+  const d = new Date(ts);
+  return d.getFullYear() === new Date(now).getFullYear() ? `${d.getDate()}. ${d.getMonth() + 1}.` : `${d.getDate()}. ${d.getMonth() + 1}. ${d.getFullYear()}`;
+}
+
 /** Format a metric value for display (cs-CZ thousands separators). */
 export function formatMetric(value: number | string): string {
   return typeof value === 'number' ? value.toLocaleString('cs-CZ') : value;

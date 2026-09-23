@@ -145,6 +145,11 @@ export function openDialog(opts: DialogOptions): DialogHandle {
 
   document.body.append(el);
   el.showModal();
+  // no explicit autofocus → focus the dialog itself (not the × button, which would show a focus ring)
+  if (!el.querySelector('[autofocus]')) {
+    el.tabIndex = -1;
+    el.focus({ preventScroll: true });
+  }
   opts.onOpen?.(el);
   return { el, body, close, closed };
 }
@@ -248,13 +253,13 @@ export function openSettingsDialog(opts: SettingsDialogOptions = {}): DialogHand
   );
 
   const theme = segmented<ThemeSetting>(`g92-theme-${uid}`, 'Vzhled', s.theme, [
-    { value: 'auto', label: 'Automaticky', icon: UI_ICONS.auto },
+    { value: 'auto', label: 'Auto', icon: UI_ICONS.auto },
     { value: 'light', label: 'Světlý', icon: UI_ICONS.sun },
     { value: 'dark', label: 'Tmavý', icon: UI_ICONS.moon },
   ], (v) => setSettings({ theme: v }));
 
-  const motion = segmented<MotionSetting>(`g92-motion-${uid}`, 'Animace', s.reducedMotion, [
-    { value: 'auto', label: 'Podle systému' },
+  const motion = segmented<MotionSetting>(`g92-motion-${uid}`, 'Animace (Auto = podle zařízení)', s.reducedMotion, [
+    { value: 'auto', label: 'Auto' },
     { value: 'on', label: 'Méně' },
     { value: 'off', label: 'Všechny' },
   ], (v) => setSettings({ reducedMotion: v }));

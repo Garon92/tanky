@@ -456,6 +456,7 @@ export class App {
         howTo,
         keys: keysCommon,
         showHowTo: lv.tutorial && !d.campaign.stars.some((s) => s > 0),
+        compact: true,
       });
     } else if (spec.mode === 'survival') {
       p = showStart({
@@ -607,7 +608,9 @@ export class App {
       }
       const isCampaign = m.mode instanceof CampaignMode;
       const actions: { label: string; value: string; variant?: 'primary' | 'secondary' | 'ghost' | 'soft'; icon?: string }[] = [];
-      if (isCampaign && r.canNext) actions.push({ label: 'Další úroveň', value: 'next', variant: 'primary', icon: UI_ICONS.arrowRight });
+      // won a campaign level → the big button continues, replay is secondary
+      const nextFirst = isCampaign && !!r.canNext;
+      if (nextFirst) actions.push({ label: 'Znovu', value: 'retry', variant: 'secondary', icon: UI_ICONS.restart });
       const p = showResults({
         title: r.title,
         subtitle: r.subtitle,
@@ -616,7 +619,8 @@ export class App {
         isNewBest: isNewBest && (r.score ?? 0) > 0,
         stars: r.stars,
         stats: r.stats.map((s) => ({ label: s.label, value: s.value })),
-        againLabel: r.won === false ? 'Zkusit znovu' : 'Hrát znovu',
+        againLabel: nextFirst ? 'Další úroveň' : r.won === false ? 'Zkusit znovu' : 'Hrát znovu',
+        againIcon: nextFirst ? UI_ICONS.arrowRight : undefined,
         menuHref: null,
         menuLabel: isCampaign ? 'Úrovně' : 'Nabídka',
         actions,
@@ -626,8 +630,8 @@ export class App {
       this.track(p);
       void p.then((choice) => {
         if (choice === undefined || this.match !== m) return;
-        if (choice === 'again' && this.spec) void this.start(this.spec, this.spec.mode === 'campaign');
-        else if (choice === 'next' && m.mode instanceof CampaignMode) void this.start({ mode: 'campaign', level: m.mode.def.id + 1 });
+        if (choice === 'again' && nextFirst && m.mode instanceof CampaignMode) void this.start({ mode: 'campaign', level: m.mode.def.id + 1 });
+        else if ((choice === 'again' || choice === 'retry') && this.spec) void this.start(this.spec, this.spec.mode === 'campaign');
         else if (choice === 'menu') {
           if (isCampaign) this.openCampaignFromGame();
           else this.goHome();

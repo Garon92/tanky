@@ -229,3 +229,16 @@ export const sfx = {
     return getSettings().sound;
   },
 };
+
+export type HapticName = 'tap' | 'success' | 'error' | 'heavy';
+const HAPTICS: Record<HapticName, number | number[]> = { tap: 8, success: [12, 40, 18], error: [30, 50, 30], heavy: 40 };
+
+/** Short vibration on devices that support it (Android). Follows the sound setting. */
+export function haptic(kind: HapticName = 'tap'): void {
+  if (!getSettings().sound) return;
+  try {
+    (navigator as Navigator & { vibrate?: (p: number | number[]) => boolean }).vibrate?.(HAPTICS[kind]);
+  } catch {
+    /* ignore */
+  }
+}

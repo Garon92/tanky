@@ -69,7 +69,11 @@ export class CampaignMode extends Mode {
       mode: 'campaign',
       won,
       title: won ? (stars === 3 ? 'Perfektní!' : 'Vítězství!') : 'Tentokrát to nevyšlo',
-      subtitle: won ? `Úroveň ${this.def.id}: ${this.def.name}` : 'Zkus to znovu – příště to dáš!',
+      subtitle: won
+        ? this.def.id === LEVELS.length
+          ? 'Celé tažení je hotové – jsi skutečný velitel!'
+          : `Úroveň ${this.def.id}: ${this.def.name}`
+        : 'Zkus to znovu – příště to dáš!',
       stars,
       canNext: won && this.def.id < LEVELS.length,
       stats: [

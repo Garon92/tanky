@@ -13,6 +13,8 @@ export interface ToastOptions {
   duration?: number;
   /** SVG string */
   icon?: string;
+  /** optional button inside the toast (e.g. "Obnovit" for PWA updates). Default duration becomes 8 s. */
+  action?: { label: string; onClick: () => void };
 }
 
 let region: HTMLElement | null = null;
@@ -28,18 +30,28 @@ function getRegion(): HTMLElement {
 export function toast(message: string, opts: ToastOptions = {}): () => void {
   const el = h('div', { class: `g92-toast${opts.variant && opts.variant !== 'default' ? ` g92-toast--${opts.variant}` : ''}` });
   if (opts.icon) el.append(h('span', { html: opts.icon, style: 'width:22px;height:22px;flex:none;display:grid' }));
-  el.append(h('span', null, message));
+  el.append(h('span', { class: 'g92-toast__msg' }, message));
+  if (opts.action) {
+    const { label, onClick } = opts.action;
+    const btn = h('button', { type: 'button', class: 'g92-toast__action' }, label);
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      onClick();
+      dismiss();
+    });
+    el.append(btn);
+  }
   const r = getRegion();
   r.append(el);
   while (r.children.length > 3) r.firstElementChild?.remove();
   let gone = false;
-  const dismiss = () => {
+  function dismiss(): void {
     if (gone) return;
     gone = true;
     el.classList.add('is-leaving');
     setTimeout(() => el.remove(), 200);
-  };
-  const duration = opts.duration ?? 2600;
+  }
+  const duration = opts.duration ?? (opts.action ? 8000 : 2600);
   if (duration > 0) setTimeout(dismiss, duration);
   el.addEventListener('click', dismiss);
   return dismiss;

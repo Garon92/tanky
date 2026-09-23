@@ -28,6 +28,7 @@ export {
   recentApps,
   subscribeActivity,
   timeAgo,
+  timeAgoShort,
   formatMetric,
   ACTIVITY_KEY,
   type ActivityEntry,
@@ -36,7 +37,7 @@ export {
   type ActivityUpdate,
 } from './activity';
 export { APPS, APP_BY_ID, ICONS, CATEGORY_LABELS, getApp, applyAccent, type G92App, type AppId, type AppCategory } from './apps';
-export { sfx, play as playSfx, tone, unlockAudio, type SfxName, type ToneOptions } from './sfx';
+export { sfx, play as playSfx, tone, unlockAudio, haptic, type SfxName, type ToneOptions, type HapticName } from './sfx';
 export { h, starsHTML, plural, flash, bindRange, UI_ICONS, type UiIconName } from './dom';
 export {
   openDialog,
@@ -75,3 +76,7 @@ export {
 export { vocative, greeting, dayPart, countLabel, type DayPart } from './cz';
 export { g92Pwa, type G92PwaOverrides } from './pwa';
 export { appIconSvg, shade } from './apps';
+export { createLoop, type Loop, type LoopOptions } from './loop';
+export { fitCanvas, type CanvasView, type FitCanvasOptions } from './canvas';
+export { createDaily, dayKey, type Daily, type DailyData, type DailyRecordResult } from './streak';
+export { setHelp, getHelp, showHelp, type HelpContent } from './help';
