@@ -25,6 +25,10 @@ export class Hud {
   private windVal: HTMLElement;
   private banner: HTMLElement;
   private hint: HTMLElement;
+  private top: HTMLElement;
+  private notice: HTMLElement;
+  private noticeQueue: { text: string; icon: string; ms: number }[] = [];
+  private noticeTimer = 0;
   private dock: HTMLElement;
   private turnLabel: HTMLElement;
   private weaponBtn: HTMLButtonElement;
@@ -57,6 +61,10 @@ export class Hud {
     this.windVal = h('span', { class: 'tk-wind__val' });
     this.wind = h('div', { class: 'tk-wind', title: 'Vítr' }, this.windArrow, this.windVal);
     const top = h('div', { class: 'tk-top' }, pauseBtn, this.players, h('div', { class: 'tk-right' }, this.counters, this.wind));
+    this.top = top;
+    // short, non-interactive messages (new badge, tips) – top of the playfield, never over the controls
+    this.notice = h('div', { class: 'tk-notice', role: 'status', 'aria-live': 'polite' });
+    new ResizeObserver(() => this.layoutNotice()).observe(top);
     this.banner = h('div', { class: 'tk-banner', 'aria-live': 'polite' });
     this.hint = h('div', { class: 'tk-hint', hidden: true });
 
@@ -84,7 +92,7 @@ export class Hud {
     this.dock = h('div', { class: 'tk-dock' }, h('div', { class: 'tk-waitrow' }, this.turnLabel, this.fastBtn), controls);
     this.picker = h('div', { class: 'tk-picker', role: 'dialog', 'aria-label': 'Výběr zbraně', hidden: true });
 
-    this.el = h('div', { class: 'tk-hud', hidden: true }, top, this.banner, this.hint, this.picker, this.dock);
+    this.el = h('div', { class: 'tk-hud', hidden: true }, top, this.banner, this.hint, this.notice, this.picker, this.dock);
     stage.append(this.el);
     document.addEventListener('pointerdown', (e) => {
       if (!this.picker.hidden && !this.picker.contains(e.target as Node) && e.target !== this.weaponBtn && !this.weaponBtn.contains(e.target as Node)) this.closePicker();
@@ -125,6 +133,43 @@ export class Hud {
     );
   }
 
+  /** Show a short message under the top bar (queued; never covers controls, never catches taps). */
+  notify(text: string, icon = '', ms = 2600): void {
+    this.noticeQueue.push({ text, icon, ms });
+    if (!this.noticeTimer) this.nextNotice();
+  }
+
+  private nextNotice(): void {
+    const n = this.noticeQueue.shift();
+    if (!n) {
+      this.noticeTimer = 0;
+      return;
+    }
+    this.notice.replaceChildren();
+    if (n.icon) this.notice.append(h('span', { class: 'tk-notice__icon', 'aria-hidden': 'true' }, n.icon));
+    this.notice.append(h('span', { class: 'tk-notice__text' }, n.text));
+    this.notice.classList.add('is-on');
+    this.noticeTimer = window.setTimeout(() => {
+      this.notice.classList.remove('is-on');
+      this.noticeTimer = window.setTimeout(() => this.nextNotice(), 280);
+    }, n.ms);
+  }
+
+  private clearNotices(): void {
+    this.noticeQueue = [];
+    window.clearTimeout(this.noticeTimer);
+    this.noticeTimer = 0;
+    this.notice.classList.remove('is-on');
+  }
+
+  private layoutNotice(): void {
+    // portrait phones show the tutorial hint right under the top bar → the notice covers the (read-only)
+    // counter row instead of the hint; elsewhere it sits just below the top bar
+    const portraitPhone = window.matchMedia('(max-width: 560px) and (min-height: 541px)').matches;
+    const y = portraitPhone ? this.top.offsetTop : this.top.offsetTop + this.top.offsetHeight + 10;
+    this.el.style.setProperty('--tk-notice-top', `${y}px`);
+  }
+
   setFast(on: boolean): void {
     this.fastBtn.setAttribute('aria-pressed', String(on));
     this.fastBtn.textContent = on ? '⏩ Zrychleno' : '⏩ Rychleji';
@@ -149,6 +194,7 @@ export class Hud {
   hide(): void {
     this.el.hidden = true;
     this.closePicker();
+    this.clearNotices();
     this.match = null;
   }
 

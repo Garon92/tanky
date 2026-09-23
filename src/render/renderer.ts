@@ -593,7 +593,7 @@ export class Renderer {
       s.t.y = p.y;
       s.t.size = s.size * k;
     }
-    this.fx.drawTexts(ctx, FONT);
+    this.fx.drawTexts(ctx, FONT, this.cam.cssW);
     for (const s of saved) {
       s.t.x = s.x;
       s.t.y = s.y;

@@ -433,7 +433,8 @@ export class Fx {
     ctx.globalAlpha = 1;
   }
 
-  drawTexts(ctx: CanvasRenderingContext2D, font: string): void {
+  /** Floating texts (screen space). `maxX` = screen width: texts are kept fully on screen. */
+  drawTexts(ctx: CanvasRenderingContext2D, font: string, maxX = 0): void {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     for (const t of this.texts) {
@@ -444,9 +445,14 @@ export class Fx {
       ctx.lineWidth = Math.max(3, t.size * 0.18);
       ctx.lineJoin = 'round';
       ctx.strokeStyle = t.outline;
-      ctx.strokeText(t.text, t.x, t.y);
+      let x = t.x;
+      if (maxX > 0) {
+        const half = ctx.measureText(t.text).width / 2 + ctx.lineWidth;
+        x = half * 2 + 8 >= maxX ? maxX / 2 : Math.min(Math.max(x, half + 4), maxX - half - 4);
+      }
+      ctx.strokeText(t.text, x, t.y);
       ctx.fillStyle = t.color;
-      ctx.fillText(t.text, t.x, t.y);
+      ctx.fillText(t.text, x, t.y);
     }
     ctx.globalAlpha = 1;
   }

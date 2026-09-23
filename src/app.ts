@@ -12,6 +12,7 @@ import { BIOMES } from './game/biomes';
 import { Renderer } from './render/renderer';
 import { recordActivity } from './kit/activity';
 import { openDialog, openSettingsDialog } from './kit/dialog';
+import { plural } from './kit/cz';
 import { UI_ICONS } from './kit/dom';
 import { autoPause, showPause, showResults, showStart } from './kit/overlay';
 import { getSettings, prefersReducedMotion, setSettings, subscribeSettings } from './kit/settings';
@@ -51,11 +52,16 @@ export class App {
   state: State = 'menu';
   private overlays: { close: (v: never) => void }[] = [];
   private appbar: HTMLElement | null;
+  /** Pause button in the appbar actions slot (family convention); the HUD one is used when the bar is hidden. */
+  private barPause: HTMLButtonElement;
   private lastAim = { angle: 0, power: 0, id: 0 };
   private resultTimer = 0;
   private dialogOpen = false;
   private rotateTipShown = false;
-  private badgeCollect: BadgeDef[] | null = null;
+  /** Badges earned during the current match (listed in its results); null outside a match. */
+  private matchBadges: BadgeDef[] | null = null;
+  /** true while the end-of-game badge checks run (those appear only in the results panel) */
+  private inResult = false;
   /** Fast-forward opponents' turns (HUD toggle). */
   private fastPref = false;
   /** Remaining real seconds of slow motion (deciding blow). */
@@ -66,6 +72,16 @@ export class App {
     canvas: HTMLCanvasElement,
   ) {
     this.appbar = document.querySelector('g92-appbar');
+    this.barPause = document.createElement('button');
+    this.barPause.type = 'button';
+    this.barPause.slot = 'actions';
+    this.barPause.className = 'g92-btn g92-btn--ghost g92-btn--icon tk-barpause';
+    this.barPause.setAttribute('aria-label', 'Pauza (Esc)');
+    this.barPause.title = 'Pauza (Esc)';
+    this.barPause.innerHTML = UI_ICONS.pause;
+    this.barPause.hidden = true;
+    this.barPause.addEventListener('click', () => this.pause());
+    this.appbar?.prepend(this.barPause);
     this.renderer = new Renderer(canvas);
     this.renderer.onHitStop = (s) => this.loop.hitStop(s);
     this.hud = new Hud(stage, this.input, {
@@ -82,9 +98,15 @@ export class App {
       this.save.update('badges', (list) => {
         if (!list.includes(b.id)) list.push(b.id);
       });
-      // badges earned at the end of a game are shown inside the results panel instead of toasts
-      if (this.badgeCollect) this.badgeCollect.push(b);
-      else {
+      // during a match: short note at the top of the playfield (never a toast over the controls) and a
+      // chip in the results; badges from the end-of-game checks appear only in the results
+      if (this.matchBadges) {
+        this.matchBadges.push(b);
+        if (!this.inResult) {
+          this.hud.notify(`Nový odznak: ${b.name}`, b.icon);
+          sfx.coin();
+        }
+      } else {
         toast(`Nový odznak: ${b.icon} ${b.name}`, { variant: 'success', icon: UI_ICONS.trophy, duration: 3200 });
         sfx.coin();
       }
@@ -160,6 +182,8 @@ export class App {
     const compact = window.matchMedia('(max-height: 540px)').matches;
     const hideBar = compact && this.state !== 'menu';
     if (this.appbar) this.appbar.hidden = hideBar;
+    this.barPause.hidden = this.state !== 'play' || hideBar || !this.appbar;
+    document.body.classList.toggle('tk-bar-hidden', hideBar || !this.appbar);
     document.body.classList.toggle('is-playing', this.state === 'play' || this.state === 'paused' || this.state === 'reward');
     requestAnimationFrame(() => this.resize());
   }
@@ -267,7 +291,8 @@ export class App {
     else if (a === 'mute') {
       const on = !getSettings().sound;
       setSettings({ sound: on });
-      toast(on ? 'Zvuk zapnut' : 'Zvuk vypnut', { icon: on ? UI_ICONS.soundOn : UI_ICONS.soundOff, duration: 1200 });
+      if (this.state === 'play') this.hud.notify(on ? 'Zvuk zapnut' : 'Zvuk vypnut', on ? '🔊' : '🔇', 1200);
+      else toast(on ? 'Zvuk zapnut' : 'Zvuk vypnut', { icon: on ? UI_ICONS.soundOn : UI_ICONS.soundOff, duration: 1200 });
     } else if (a === 'help') {
       if (!this.dialogOpen && (this.state === 'play' || this.state === 'menu')) this.openHelp();
     } else if (a === 'pause' && this.state === 'play' && !this.dialogOpen) {
@@ -293,6 +318,7 @@ export class App {
   goHome(): void {
     this.closeOverlays();
     this.match = null;
+    this.matchBadges = null;
     this.spec = null;
     this.hud.hide();
     this.pointer.match = null;
@@ -425,6 +451,7 @@ export class App {
   async start(spec: Spec, intro = true): Promise<void> {
     this.closeOverlays();
     this.spec = spec;
+    this.matchBadges = [];
     let m = this.createMatch(spec);
     this.match = m;
     this.pointer.match = m;
@@ -453,7 +480,7 @@ export class App {
     this.lastAim.id = 0;
     if (!this.rotateTipShown && window.innerHeight > window.innerWidth * 1.1 && window.innerWidth < 700) {
       this.rotateTipShown = true;
-      toast('Tip: otoč zařízení na šířku – bojiště bude větší.', { icon: UI_ICONS.restart, duration: 4500 });
+      window.setTimeout(() => this.state === 'play' && this.hud.notify('Tip: otoč zařízení na šířku – bojiště bude větší.', '🔄', 4500), 2600);
     }
     if (spec.mode === 'campaign') {
       this.save.update('campaign', (c) => (c.last = spec.level));
@@ -470,7 +497,7 @@ export class App {
     const back = document.createElement('button');
     back.type = 'button';
     back.className = 'g92-btn g92-btn--ghost g92-btn--sm tk-intro-back';
-    back.innerHTML = `${UI_ICONS.back}<span>${spec.mode === 'campaign' ? 'Zpět na úrovně' : 'Zpět'}</span>`;
+    back.innerHTML = spec.mode === 'campaign' ? `${UI_ICONS.back}<span>Úrovně</span>` : `${UI_ICONS.home}<span>Domů</span>`;
     let backed = false;
     back.addEventListener('click', () => {
       backed = true;
@@ -503,13 +530,11 @@ export class App {
         title: `${lv.id}. ${lv.name}`,
         subtitle: lv.intro,
         icon: ICON.campaign,
-        playLabel: 'Do boje!',
         difficulties: DIFFICULTIES,
         difficulty: d.campaign.difficulty,
         best: stars ? { label: 'Tvoje hvězdy', value: '★'.repeat(stars) + '☆'.repeat(3 - stars) } : null,
         howTo,
         keys: keysCommon,
-        showHowTo: lv.tutorial && !d.campaign.stars.some((s) => s > 0),
         compact: true,
       });
     } else if (spec.mode === 'survival') {
@@ -528,7 +553,6 @@ export class App {
         title: 'Střelnice',
         subtitle: 'Máš 12 ran. Sestřel co nejvíc balónků, terčů, ptáků a UFO. Víc cílů jednou ranou = kombo!',
         icon: ICON.range,
-        playLabel: 'Střílet!',
         best: d.targets.bestScore ? { label: 'Rekord', value: d.targets.bestScore } : null,
         howTo,
         keys: keysCommon,
@@ -560,7 +584,7 @@ export class App {
     const p = showPause({
       subtitle: info.title,
       menuHref: null,
-      menuLabel: 'Nabídka',
+      menuLabel: 'Domů',
       stats: info.counters.map((c) => ({ label: c.label, value: c.value })),
     });
     this.track(p);
@@ -653,8 +677,8 @@ export class App {
     }
     // badges
     const player = m.world.tanks.find((t) => t.control === 'human');
-    this.badgeCollect = [];
-    const newBadges = this.badgeCollect;
+    const newBadges = this.matchBadges ?? [];
+    this.inResult = true;
     this.badges.result(r, m, {
       level: m.mode instanceof CampaignMode ? m.mode.def.id : undefined,
       totalStars: this.save.totalStars,
@@ -665,7 +689,7 @@ export class App {
       damageTaken: player?.damageTaken,
       vsBot: m.world.tanks.some((t) => t.control === 'bot'),
     });
-    this.badgeCollect = null;
+    this.inResult = false;
     recordActivity('tanky', this.activity());
 
     this.resultTimer = window.setTimeout(() => {
@@ -688,32 +712,39 @@ export class App {
       if (newBadges.length) {
         badgesEl = document.createElement('div');
         badgesEl.className = 'tk-newbadges';
-        badgesEl.setAttribute('aria-label', 'Nové odznaky');
+        const label = document.createElement('span');
+        label.className = 'tk-newbadges__label';
+        label.textContent = newBadges.length === 1 ? 'Nový odznak' : 'Nové odznaky';
+        const list = document.createElement('div');
+        list.className = 'tk-newbadges__list';
         for (const b of newBadges) {
           const chip = document.createElement('div');
           chip.className = 'tk-newbadge';
-          chip.innerHTML = `<span aria-hidden="true">${b.icon}</span>Nový odznak: ${b.name}`;
-          badgesEl.append(chip);
+          chip.innerHTML = `<span aria-hidden="true">${b.icon}</span>`;
+          chip.append(b.name);
+          list.append(chip);
         }
+        badgesEl.append(label, list);
         setTimeout(() => sfx.coin(), 700);
       }
       const isCampaign = m.mode instanceof CampaignMode;
       const actions: { label: string; value: string; variant?: 'primary' | 'secondary' | 'ghost' | 'soft'; icon?: string }[] = [];
       // won a campaign level → the big button continues, replay is secondary
       const nextFirst = isCampaign && !!r.canNext;
-      if (nextFirst) actions.push({ label: 'Znovu', value: 'retry', variant: 'secondary', icon: UI_ICONS.restart });
+      if (nextFirst) actions.push({ label: 'Hrát znovu', value: 'retry', variant: 'secondary', icon: UI_ICONS.restart });
       const p = showResults({
         title: r.title,
         subtitle: r.subtitle,
         score: r.score,
+        scoreLabel: r.score !== undefined ? plural(r.score, 'bod', 'body', 'bodů') : undefined,
         best: r.score !== undefined ? best : undefined,
         isNewBest: isNewBest && (r.score ?? 0) > 0,
         stars: r.stars,
         stats: r.stats.map((s) => ({ label: s.label, value: s.value })),
-        againLabel: nextFirst ? 'Další úroveň' : r.won === false ? 'Zkusit znovu' : 'Hrát znovu',
+        againLabel: nextFirst ? 'Další úroveň' : 'Hrát znovu',
         againIcon: nextFirst ? UI_ICONS.arrowRight : undefined,
         menuHref: null,
-        menuLabel: isCampaign ? 'Úrovně' : 'Nabídka',
+        menuLabel: isCampaign ? 'Úrovně' : 'Domů',
         actions,
         lost: r.won === false,
         extra,
@@ -743,7 +774,7 @@ export class App {
     const levels = d.campaign.stars.filter((s) => s > 0).length;
     return {
       metric: stars > 0 ? { label: 'Hvězdy', value: `${stars}/${LEVELS.length * 3}` } : d.survival.bestScore ? { label: 'Rekord', value: d.survival.bestScore } : undefined,
-      progress: stars / (LEVELS.length * 3),
+      progress: stars > 0 ? stars / (LEVELS.length * 3) : undefined,
       note: levels > 0 ? (levels >= LEVELS.length ? 'Tažení dokončeno!' : `Tažení: úroveň ${levels + 1}`) : undefined,
     };
   }

@@ -5,6 +5,7 @@ import type { RewardOption } from '../game/match';
 import { BADGES } from '../game/badges';
 import { TANK_KINDS, TEAM_COLORS, TEAM_NAMES } from '../game/tank';
 import { WEAPON_ORDER, WEAPONS } from '../game/weapons';
+import { clearActivity } from '../kit/activity';
 import { getApp } from '../kit/apps';
 import { confirmDialog } from '../kit/dialog';
 import { h, starsHTML, UI_ICONS } from '../kit/dom';
@@ -182,7 +183,7 @@ export function showCampaign(save: Save): Screen<number | null> {
   const head = h(
     'div',
     { class: 'tk-head' },
-    btn('Zpět', 'g92-btn--ghost g92-btn--sm tk-back', UI_ICONS.back, () => s.close(null)),
+    btn('Domů', 'g92-btn--ghost g92-btn--sm tk-back', UI_ICONS.home, () => s.close(null)),
     h('h2', { class: 'tk-head__title' }, 'Tažení'),
     h('span', { class: 'tk-head__stars', html: `${ICON.star}<b>${save.totalStars}</b> / ${LEVELS.length * 3}` }),
   );
@@ -252,7 +253,7 @@ export function levelIntroExtra(lv: LevelDef): { info: HTMLElement; par: HTMLEle
     if (!n) continue;
     weapons.append(h('span', { class: 'tk-loadout__item', title: WEAPONS[w].name }, h('span', { html: WEAPON_ICONS[w] }), h('b', null, n >= 999 ? '∞' : `×${n}`)));
   }
-  // info goes under the title (hero column), the 3-star goal sits right above "Do boje!"
+  // info goes under the title (hero column), the 3-star goal sits right above "Hrát"
   return {
     info: h(
       'div',
@@ -282,7 +283,7 @@ export function showDuelSetup(save: Save): Screen<DuelSetup | null> {
   const head = h(
     'div',
     { class: 'tk-head' },
-    btn('Zpět', 'g92-btn--ghost g92-btn--sm tk-back', UI_ICONS.back, () => s.close(null)),
+    btn('Domů', 'g92-btn--ghost g92-btn--sm tk-back', UI_ICONS.home, () => s.close(null)),
     h('h2', { class: 'tk-head__title' }, 'Souboj'),
     h('span'),
   );
@@ -295,7 +296,7 @@ export function showDuelSetup(save: Save): Screen<DuelSetup | null> {
     { v: 'off', label: 'Nehraje', icon: ICON.off },
   ];
   const slots = h('div', { class: 'tk-slots' });
-  const startBtn = btn('Začít souboj', 'g92-btn--xl g92-btn--block', UI_ICONS.play, () => {
+  const startBtn = btn('Hrát', 'g92-btn--xl g92-btn--block', UI_ICONS.play, () => {
     save.data.duel = cfg;
     save.commit('duel');
     s.close(cfg);
@@ -557,8 +558,10 @@ export function settingsExtra(save: Save, onChange: () => void): HTMLElement {
     void confirmDialog({ title: 'Smazat postup?', message: 'Opravdu smazat všechny hvězdy a rekordy v Tancích? Nejde to vrátit.', confirmLabel: 'Smazat', danger: true }).then((ok) => {
       if (!ok) return;
       save.resetAll();
-      onChange();
+      clearActivity('tanky'); // the menu must not keep showing "Pokračovat · Tanky" with old stars
       sfx.error();
+      onChange();
+      window.setTimeout(() => location.reload(), 250);
     });
   });
   return h(
