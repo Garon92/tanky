@@ -1356,6 +1356,50 @@ html[data-input='touch'] .tk-fire {
   }
 }
 
+/* phones sideways: the kit puts hero | controls side by side – keep the level info short so that
+   both columns fit without scrolling ("Do boje!" always visible) */
+@media (max-height: 560px) and (orientation: landscape) {
+  .g92-overlay__hero:has(.tk-intro) {
+    gap: var(--g92-space-2);
+  }
+  .g92-overlay__hero:has(.tk-intro) .g92-overlay__icon {
+    display: none;
+  }
+  .g92-overlay__hero:has(.tk-intro) .g92-overlay__title {
+    font-size: var(--g92-fs-2xl);
+  }
+  .g92-overlay__hero:has(.tk-intro) .g92-overlay__subtitle {
+    font-size: var(--g92-fs-sm);
+    line-height: 1.35;
+  }
+  .tk-intro {
+    gap: var(--g92-space-2);
+    font-size: var(--g92-fs-sm);
+  }
+  .tk-intro__tip {
+    padding: 6px 10px;
+    line-height: 1.35;
+  }
+  .tk-enemies {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+  }
+  .tk-enemy__icon {
+    width: 30px;
+    height: 30px;
+    padding: 2px;
+    border-radius: 9px;
+  }
+  .tk-enemy__text small {
+    display: none;
+  }
+  .tk-loadout__item span {
+    width: 22px;
+    height: 22px;
+  }
+}
+
 /* ---- duel setup ---- */
 .tk-screen--duel .tk-panel {
   justify-items: stretch;

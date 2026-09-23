@@ -491,9 +491,12 @@ export class App {
       { icon: '🎁', text: 'Sestřel bednu s padákem a dostaneš dárek.' },
     ];
     let extra: HTMLElement | null = null;
+    let heroExtra: HTMLElement | null = null;
     if (spec.mode === 'campaign') {
       const lv = levelById(spec.level) ?? LEVELS[0]!;
-      extra = levelIntroExtra(lv);
+      const parts = levelIntroExtra(lv);
+      heroExtra = parts.info;
+      extra = parts.par;
       const stars = d.campaign.stars[lv.id - 1] ?? 0;
       p = showStart({
         backdrop: 'blur',
@@ -531,9 +534,16 @@ export class App {
         keys: keysCommon,
       });
     }
-    // Kit showStart({ extra }) can't insert into the start view yet (see kit-requests.md) → insert manually.
-    const actions = p.el.querySelector('.g92-overlay__view .g92-overlay__actions');
+    // Inserted by hand (not via showStart({ extra })): the level info belongs under the title – in the
+    // left hero column on short landscape screens – and "Zpět" must sit below the main actions.
+    const view = p.el.querySelector('.g92-overlay__view');
+    const actions = view?.querySelector('.g92-overlay__actions');
+    const hero = view?.querySelector('.g92-overlay__hero');
     if (actions && actions.parentElement) {
+      if (heroExtra) {
+        if (hero) hero.append(heroExtra);
+        else actions.parentElement.insertBefore(heroExtra, actions);
+      }
       if (extra) actions.parentElement.insertBefore(extra, actions);
       actions.parentElement.append(back);
     }

@@ -231,7 +231,7 @@ export function showCampaign(save: Save): Screen<number | null> {
 }
 
 /** Extra content for the level start panel: enemies + tip + par. */
-export function levelIntroExtra(lv: LevelDef): HTMLElement {
+export function levelIntroExtra(lv: LevelDef): { info: HTMLElement; par: HTMLElement } {
   const enemies = h('ul', { class: 'tk-enemies' });
   const kinds = new Map<string, number>();
   for (const e of lv.enemies) kinds.set(e.kind, (kinds.get(e.kind) ?? 0) + 1);
@@ -252,13 +252,16 @@ export function levelIntroExtra(lv: LevelDef): HTMLElement {
     if (!n) continue;
     weapons.append(h('span', { class: 'tk-loadout__item', title: WEAPONS[w].name }, h('span', { html: WEAPON_ICONS[w] }), h('b', null, n >= 999 ? '∞' : `×${n}`)));
   }
-  return h(
-    'div',
-    { class: 'tk-intro' },
-    h('p', { class: 'tk-intro__tip' }, h('span', { 'aria-hidden': 'true' }, '💡 '), lv.tip),
-    h('div', { class: 'tk-intro__cols' }, h('div', null, h('span', { class: 'g92-eyebrow' }, 'Nepřátelé'), enemies), h('div', null, h('span', { class: 'g92-eyebrow' }, 'Tvoje zbraně'), weapons)),
-    h('p', { class: 'tk-intro__par', html: `${ICON.star}${ICON.star}${ICON.star} když zvítězíš nejvýš na <b>${lv.par}</b> ${lv.par < 5 ? 'výstřely' : 'výstřelů'}` }),
-  );
+  // info goes under the title (hero column), the 3-star goal sits right above "Do boje!"
+  return {
+    info: h(
+      'div',
+      { class: 'tk-intro' },
+      h('p', { class: 'tk-intro__tip' }, h('span', { 'aria-hidden': 'true' }, '💡 '), lv.tip),
+      h('div', { class: 'tk-intro__cols' }, h('div', null, h('span', { class: 'g92-eyebrow' }, 'Nepřátelé'), enemies), h('div', null, h('span', { class: 'g92-eyebrow' }, 'Tvoje zbraně'), weapons)),
+    ),
+    par: h('p', { class: 'tk-intro__par', html: `${ICON.star}${ICON.star}${ICON.star} když zvítězíš nejvýš na <b>${lv.par}</b> ${lv.par < 5 ? 'výstřely' : 'výstřelů'}` }),
+  };
 }
 
 export const DIFFICULTIES: { id: Difficulty; label: string; icon: string; hint: string }[] = [
