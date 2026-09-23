@@ -1,5 +1,6 @@
 import { clamp } from '../core/math';
 import type { DuelSlotSave } from '../core/storage';
+import { BIOMES } from './biomes';
 import { WORLD_W } from './constants';
 import { levelById, LEVELS, starsFor, type LevelDef } from './levels';
 import { buildLevel, flattestNear, randomMap, windMaxFor } from './mapgen';
@@ -227,7 +228,7 @@ export class DuelMode extends Mode {
     const idx = this.lastWinner ? this.tanks.indexOf(this.lastWinner) : -1;
     this.match.firstTank = this.tanks[(idx + 1) % this.tanks.length] ?? null;
     this.setupRound();
-    this.match.announce({ text: `Kolo ${this.match.round + 1}`, sub: this.scoreLine(), kind: 'round' });
+    this.match.announce({ text: `Kolo ${this.match.round + 1}`, sub: `${BIOMES[this.match.world.biome].name} · ${this.scoreLine()}`, kind: 'round' });
     return true;
   }
 

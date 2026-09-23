@@ -8,6 +8,7 @@ import { Match, type ResultData, type RewardOption } from './game/match';
 import { BadgeTracker } from './game/badges';
 import { CampaignMode, DemoMode, DuelMode, SurvivalMode, TargetsMode, type DuelConfig } from './game/modes';
 import type { BiomeId } from './game/types';
+import { BIOMES } from './game/biomes';
 import { Renderer } from './render/renderer';
 import { recordActivity } from './kit/activity';
 import { openDialog, openSettingsDialog } from './kit/dialog';
@@ -453,7 +454,7 @@ export class App {
       const lv = levelById(spec.level);
       if (lv) this.hud.announce({ text: `${lv.id}. ${lv.name}`, sub: this.save.data.campaign.difficulty === 'easy' ? 'Lehká obtížnost' : this.save.data.campaign.difficulty === 'hard' ? 'Těžká obtížnost' : undefined, kind: 'round' });
     } else if (spec.mode === 'duel') {
-      this.hud.announce({ text: 'Kolo 1', sub: `Hraje se na ${spec.cfg.rounds} ${spec.cfg.rounds === 1 ? 'výhru' : spec.cfg.rounds < 5 ? 'výhry' : 'výher'}`, kind: 'round' });
+      this.hud.announce({ text: 'Kolo 1', sub: `${BIOMES[m.world.biome].name} · hraje se na ${spec.cfg.rounds} ${spec.cfg.rounds === 1 ? 'výhru' : spec.cfg.rounds < 5 ? 'výhry' : 'výher'}`, kind: 'round' });
     }
   }
 
