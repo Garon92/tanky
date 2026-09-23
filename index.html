@@ -1,92 +1,20 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="cs">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>TANKY</title>
-    <link rel="stylesheet" href="./styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Tanky – tanková bitva</title>
+    <meta name="description" content="Zamiř, vystřel a přechytrač soupeře! Tahová tanková bitva pro celou rodinu: tažení, souboj až pro 4 hráče, přežití a střelnice." />
+    <meta name="theme-color" content="#ef5350" />
+    <link rel="icon" href="%BASE_URL%favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="%BASE_URL%apple-touch-icon.png" />
   </head>
-  <body>
-    <div id="score"> 
-      <span id="scoreRed" class="red">0</span>
-      <span class="colon">:</span>
-      <span id="scoreBlue" class="blue">0</span>
-    </div>
-
-    <button id="aimToggleRed" class="aimToggle red" aria-pressed="false" aria-label="Zaměřovač – Červený">
-      <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
-        <circle cx="12" cy="12" r="7.5" fill="none" stroke="currentColor" stroke-width="2" />
-        <line x1="12" y1="2" x2="12" y2="6" stroke="currentColor" stroke-width="2" />
-        <line x1="12" y1="18" x2="12" y2="22" stroke="currentColor" stroke-width="2" />
-        <line x1="2" y1="12" x2="6" y2="12" stroke="currentColor" stroke-width="2" />
-        <line x1="18" y1="12" x2="22" y2="12" stroke="currentColor" stroke-width="2" />
-      </svg>
-    </button>
-    <button id="aimToggleBlue" class="aimToggle blue" aria-pressed="false" aria-label="Zaměřovač – Modrý">
-      <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
-        <circle cx="12" cy="12" r="7.5" fill="none" stroke="currentColor" stroke-width="2" />
-        <line x1="12" y1="2" x2="12" y2="6" stroke="currentColor" stroke-width="2" />
-        <line x1="12" y1="18" x2="12" y2="22" stroke="currentColor" stroke-width="2" />
-        <line x1="2" y1="12" x2="6" y2="12" stroke="currentColor" stroke-width="2" />
-        <line x1="18" y1="12" x2="22" y2="12" stroke="currentColor" stroke-width="2" />
-      </svg>
-    </button>
-
-    <!-- Bot difficulty toggles: Red side -->
-    <div id="botGroupRed" class="botGroup red" aria-label="Bot – Červený">
-      <button id="botEasyRed" class="botBtn red" aria-pressed="false" aria-label="Bot – Červený: Snadný">
-        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
-          <circle cx="12" cy="12" r="5" fill="currentColor" />
-        </svg>
-      </button>
-      <button id="botMediumRed" class="botBtn red" aria-pressed="false" aria-label="Bot – Červený: Střední">
-        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
-          <circle cx="6" cy="12" r="4.2" fill="currentColor" />
-          <circle cx="18" cy="12" r="4.2" fill="currentColor" />
-        </svg>
-      </button>
-      <button id="botHardRed" class="botBtn red" aria-pressed="false" aria-label="Bot – Červený: Těžký">
-        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
-          <circle cx="12" cy="7" r="4" fill="currentColor" />
-          <circle cx="6" cy="18" r="4" fill="currentColor" />
-          <circle cx="18" cy="18" r="4" fill="currentColor" />
-        </svg>
-      </button>
-    </div>
-
-    <!-- Bot difficulty toggles: Blue side (mirrored order for symmetry: Hard–Medium–Easy) -->
-    <div id="botGroupBlue" class="botGroup blue" aria-label="Bot – Modrý">
-      <button id="botHardBlue" class="botBtn blue" aria-pressed="false" aria-label="Bot – Modrý: Těžký">
-        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
-          <circle cx="12" cy="7" r="4" fill="currentColor" />
-          <circle cx="6" cy="18" r="4" fill="currentColor" />
-          <circle cx="18" cy="18" r="4" fill="currentColor" />
-        </svg>
-      </button>
-      <button id="botMediumBlue" class="botBtn blue" aria-pressed="false" aria-label="Bot – Modrý: Střední">
-        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
-          <circle cx="6" cy="12" r="4.2" fill="currentColor" />
-          <circle cx="18" cy="12" r="4.2" fill="currentColor" />
-        </svg>
-      </button>
-      <button id="botEasyBlue" class="botBtn blue" aria-pressed="false" aria-label="Bot – Modrý: Snadný">
-        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
-          <circle cx="12" cy="12" r="5" fill="currentColor" />
-        </svg>
-      </button>
-    </div>
-
-    
-
-    <canvas id="gameCanvas"></canvas>
-
-    <div id="overlay" class="hidden">
-      <div id="overlayText"></div>
-      <button id="restartBtn" class="hidden" aria-label="Nová hra">▶</button>
-    </div>
-
-    <script src="./main.js"></script>
+  <body class="g92-app tk-body">
+    <g92-appbar app="tanky" fullscreen help></g92-appbar>
+    <main id="stage" class="tk-stage g92-no-touch-scroll">
+      <canvas id="game" aria-label="Bojiště"></canvas>
+    </main>
+    <noscript>Tanky potřebují zapnutý JavaScript.</noscript>
+    <script type="module" src="/src/main.ts"></script>
   </body>
-  </html>
-
-
+</html>

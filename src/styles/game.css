@@ -1,0 +1,1646 @@
+/* Tanky – app styles on top of the g92 kit (tokens + components). */
+
+html,
+body.tk-body {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+body.tk-body {
+  min-height: 100dvh;
+  background: #0b1020;
+}
+
+.tk-stage {
+  position: relative;
+  flex: 1 1 auto;
+  width: 100%;
+  height: calc(100dvh - var(--g92-appbar-total));
+  overflow: hidden;
+  background: #0b1020;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+g92-appbar[hidden] + .tk-stage {
+  height: 100dvh;
+}
+
+#game {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  max-width: none;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+/* ==========================================================================
+   HUD
+   ========================================================================== */
+.tk-hud {
+  --glass: rgb(12 16 30 / 0.58);
+  --glass-strong: rgb(12 16 30 / 0.78);
+  --glass-line: rgb(255 255 255 / 0.16);
+  --hud-text: #f4f6ff;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  color: var(--hud-text);
+  font-family: var(--g92-font);
+  z-index: 5;
+}
+
+.tk-hud[hidden] {
+  display: none;
+}
+
+.tk-hud button {
+  pointer-events: auto;
+  font-family: inherit;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tk-hud svg,
+.tk-screen svg,
+.tk-help svg,
+.g92-overlay svg {
+  flex: none;
+}
+
+.tk-top {
+  position: absolute;
+  top: max(10px, env(safe-area-inset-top, 0px));
+  left: max(10px, env(safe-area-inset-left, 0px));
+  right: max(10px, env(safe-area-inset-right, 0px));
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.tk-iconbtn {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 16px;
+  border: 1px solid var(--glass-line);
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  transition: transform var(--g92-dur-1) var(--g92-ease-out), background var(--g92-dur-2);
+}
+
+.tk-iconbtn svg {
+  width: 22px;
+  height: 22px;
+}
+
+.tk-iconbtn:hover {
+  background: var(--glass-strong);
+}
+
+.tk-iconbtn:active {
+  transform: scale(0.94);
+}
+
+.tk-iconbtn:focus-visible,
+.tk-hud button:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
+
+.tk-players {
+  flex: 1 1 auto;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.tk-pill {
+  --c: #ff4b4b;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 36px;
+  padding: 0 12px 0 10px;
+  border-radius: 999px;
+  background: var(--glass);
+  border: 1px solid var(--glass-line);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  font-size: 0.875rem;
+  font-weight: 800;
+  white-space: nowrap;
+  transition: transform var(--g92-dur-3) var(--g92-ease-spring), box-shadow var(--g92-dur-2), opacity var(--g92-dur-3);
+}
+
+.tk-pill.is-active {
+  transform: translateY(2px) scale(1.06);
+  box-shadow: 0 0 0 2px var(--c), 0 6px 18px -6px var(--c);
+}
+
+.tk-pill.is-dead {
+  opacity: 0.45;
+  filter: grayscale(0.8);
+}
+
+.tk-pill__dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--c);
+  box-shadow: 0 0 0 2px rgb(255 255 255 / 0.25);
+  flex: none;
+}
+
+.tk-pill__name {
+  max-width: 9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tk-pill__hp {
+  position: relative;
+  width: 58px;
+  height: 8px;
+  border-radius: 99px;
+  background: rgb(255 255 255 / 0.16);
+  overflow: hidden;
+}
+
+.tk-pill__hp i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #3fcf5b, #7bea6d);
+  transition: width var(--g92-dur-4) var(--g92-ease-out);
+}
+
+.tk-pill.is-low .tk-pill__hp i {
+  background: linear-gradient(90deg, #ff4b4b, #ff8a65);
+}
+
+.tk-pill.has-shield .tk-pill__hp {
+  box-shadow: 0 0 0 2px rgb(120 220 255 / 0.8);
+}
+
+.tk-pill__wins {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.tk-pill__wins span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid rgb(255 255 255 / 0.55);
+}
+
+.tk-pill__wins span.on {
+  background: var(--g92-gold);
+  border-color: var(--g92-gold);
+}
+
+.tk-pill--foe .tk-pill__name {
+  font-weight: 700;
+  opacity: 0.9;
+}
+
+.tk-right {
+  flex: none;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.tk-counters {
+  display: flex;
+  gap: 6px;
+}
+
+.tk-counter,
+.tk-wind {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--glass);
+  border: 1px solid var(--glass-line);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.95rem;
+}
+
+.tk-counter__icon,
+.tk-wind__arrow {
+  display: grid;
+  width: 20px;
+  height: 20px;
+}
+
+.tk-counter__icon svg,
+.tk-wind__arrow svg {
+  width: 100%;
+  height: 100%;
+}
+
+.tk-wind {
+  --strength: 0;
+  color: color-mix(in oklab, #fff calc(100% - var(--strength) * 45%), #7fd3ff);
+}
+
+.tk-wind.is-calm {
+  color: rgb(255 255 255 / 0.75);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.tk-wind__arrow {
+  transition: transform var(--g92-dur-3) var(--g92-ease-out);
+}
+
+/* ---- banner ---- */
+.tk-banner {
+  --c: var(--accent);
+  position: absolute;
+  left: 50%;
+  top: 22%;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  transform: translate(-50%, -10px) scale(0.9);
+  opacity: 0;
+  text-align: center;
+  pointer-events: none;
+  transition:
+    opacity var(--g92-dur-3) var(--g92-ease-out),
+    transform var(--g92-dur-4) var(--g92-ease-spring);
+  width: max-content;
+  max-width: 92vw;
+}
+
+.tk-banner.is-on {
+  opacity: 1;
+  transform: translate(-50%, 0) scale(1);
+}
+
+.tk-banner__text {
+  font-size: clamp(1.6rem, 1rem + 3vw, 3rem);
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  line-height: 1.05;
+  color: #fff;
+  text-shadow:
+    0 3px 0 color-mix(in oklab, var(--c) 70%, #000),
+    0 8px 30px rgb(0 0 0 / 0.55);
+  -webkit-text-stroke: 1px color-mix(in oklab, var(--c) 60%, #000);
+}
+
+.tk-banner--turn .tk-banner__text {
+  font-size: clamp(1.2rem, 0.9rem + 1.6vw, 2rem);
+}
+
+.tk-banner--good .tk-banner__text {
+  color: #fff6c2;
+  --c: #ff9800;
+}
+
+.tk-banner__sub {
+  font-size: clamp(0.95rem, 0.8rem + 0.6vw, 1.25rem);
+  font-weight: 800;
+  color: rgb(255 255 255 / 0.92);
+  text-shadow: 0 2px 10px rgb(0 0 0 / 0.6);
+}
+
+/* ---- hint bubble ---- */
+.tk-hint {
+  position: absolute;
+  left: 50%;
+  bottom: calc(max(12px, env(safe-area-inset-bottom, 0px)) + 96px);
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(92vw, 40rem);
+  padding: 10px 16px;
+  border-radius: 18px;
+  background: rgb(255 253 240 / 0.95);
+  color: #2b2410;
+  font-weight: 700;
+  line-height: 1.35;
+  box-shadow: 0 10px 30px -8px rgb(0 0 0 / 0.45);
+  animation: tk-hint-in var(--g92-dur-4) var(--g92-ease-spring);
+}
+
+.tk-hint[hidden] {
+  display: none;
+}
+
+.tk-hint__icon {
+  font-size: 1.4rem;
+  flex: none;
+}
+
+.tk-hint .g92-kbd {
+  color: #2b2410;
+}
+
+@keyframes tk-hint-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 10px) scale(0.96);
+  }
+}
+
+/* ---- dock ---- */
+.tk-dock {
+  --c: var(--accent);
+  position: absolute;
+  left: 50%;
+  bottom: max(10px, env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  max-width: calc(100% - 20px);
+}
+
+.tk-turn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--glass-strong);
+  border: 1px solid var(--glass-line);
+  font-weight: 800;
+  font-size: 0.95rem;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.tk-turn[hidden] {
+  display: none;
+}
+
+.tk-turn__dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--c);
+  animation: tk-pulse 1s ease-in-out infinite;
+}
+
+@keyframes tk-pulse {
+  50% {
+    transform: scale(1.35);
+    opacity: 0.7;
+  }
+}
+
+.tk-dock.is-human .tk-turn {
+  display: none;
+}
+
+.tk-controls {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 24px;
+  background: var(--glass);
+  border: 1px solid var(--glass-line);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 12px 30px -12px rgb(0 0 0 / 0.5);
+  transition:
+    opacity var(--g92-dur-3),
+    transform var(--g92-dur-3) var(--g92-ease-out);
+}
+
+.tk-dock.is-waiting .tk-controls {
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.tk-dock.is-waiting .tk-controls * {
+  pointer-events: none;
+}
+
+.tk-weapon {
+  display: grid;
+  grid-template-columns: 34px auto;
+  grid-template-rows: auto auto;
+  align-items: center;
+  justify-content: start;
+  justify-items: start;
+  column-gap: 10px;
+  min-width: 9.5rem;
+  padding: 6px 12px 6px 8px;
+  border-radius: 16px;
+  border: 1px solid var(--glass-line);
+  background: rgb(255 255 255 / 0.08);
+  cursor: pointer;
+  text-align: left;
+  position: relative;
+}
+
+.tk-weapon:hover,
+.tk-hold:hover {
+  background: rgb(255 255 255 / 0.16);
+}
+
+.tk-weapon__icon {
+  grid-row: 1 / 3;
+  width: 34px;
+  height: 34px;
+  display: grid;
+}
+
+.tk-weapon__icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.tk-weapon__name {
+  font-weight: 800;
+  font-size: 0.92rem;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.tk-weapon__ammo {
+  font-weight: 700;
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.tk-weapon__more {
+  position: absolute;
+  right: 8px;
+  top: 6px;
+  font-size: 0.7rem;
+  opacity: 0.7;
+}
+
+.tk-ctrl {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tk-ctrl[hidden] {
+  display: none;
+}
+
+.tk-hold {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  border: 1px solid var(--glass-line);
+  background: rgb(255 255 255 / 0.08);
+  cursor: pointer;
+  touch-action: none;
+  transition: transform var(--g92-dur-1), background var(--g92-dur-2);
+}
+
+.tk-hold svg {
+  width: 22px;
+  height: 22px;
+}
+
+.tk-hold.is-down {
+  transform: scale(0.92);
+  background: color-mix(in oklab, var(--c) 45%, transparent);
+}
+
+.tk-readout {
+  display: grid;
+  justify-items: center;
+  min-width: 4.4rem;
+  line-height: 1.1;
+}
+
+.tk-readout__row {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.tk-readout__col {
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+}
+
+.tk-label {
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.7;
+}
+
+.tk-val {
+  font-size: 1.15rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.tk-dir {
+  display: grid;
+  width: 16px;
+  height: 16px;
+  opacity: 0.85;
+  transition: transform var(--g92-dur-2);
+}
+
+.tk-dir svg {
+  width: 100%;
+  height: 100%;
+}
+
+.tk-bar {
+  position: relative;
+  display: block;
+  width: 3.6rem;
+  height: 6px;
+  border-radius: 99px;
+  background: rgb(255 255 255 / 0.18);
+  overflow: hidden;
+}
+
+.tk-bar i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: var(--c);
+}
+
+.tk-bar--power i {
+  background: linear-gradient(90deg, #ffd54a, #ff7043);
+}
+
+.tk-bar--fuel i {
+  background: linear-gradient(90deg, #ffb74d, #ff9800);
+}
+
+.tk-ctrl--drive .tk-readout {
+  min-width: 3.8rem;
+  gap: 6px;
+}
+
+.tk-ctrl--drive.is-empty .tk-hold {
+  opacity: 0.4;
+}
+
+.tk-fire {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 22px 0 18px;
+  min-height: 52px;
+  border: 0;
+  border-radius: 18px;
+  background: linear-gradient(180deg, color-mix(in oklab, var(--accent) 80%, #fff), var(--accent) 55%, var(--accent-strong));
+  color: #fff;
+  font-weight: 900;
+  font-size: 1.25rem;
+  letter-spacing: 0.04em;
+  box-shadow:
+    inset 0 -4px 0 rgb(0 0 0 / 0.2),
+    0 8px 20px -6px var(--accent-glow);
+  cursor: pointer;
+  transition: transform var(--g92-dur-1) var(--g92-ease-out), filter var(--g92-dur-2);
+  text-shadow: 0 1px 1px rgb(0 0 0 / 0.25);
+}
+
+.tk-fire svg {
+  width: 24px;
+  height: 24px;
+}
+
+.tk-fire:hover {
+  filter: brightness(1.08);
+}
+
+.tk-fire:active {
+  transform: scale(0.95) translateY(2px);
+}
+
+/* ---- weapon picker ---- */
+.tk-picker {
+  position: absolute;
+  left: 50%;
+  bottom: calc(max(10px, env(safe-area-inset-bottom, 0px)) + 86px);
+  transform: translateX(-50%);
+  width: min(94vw, 44rem);
+  max-height: 62%;
+  overflow: auto;
+  padding: 12px;
+  border-radius: 22px;
+  background: var(--glass-strong);
+  border: 1px solid var(--glass-line);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 20px 50px -12px rgb(0 0 0 / 0.6);
+  pointer-events: auto;
+  animation: tk-hint-in var(--g92-dur-3) var(--g92-ease-spring);
+}
+
+.tk-picker[hidden] {
+  display: none;
+}
+
+.tk-picker__title {
+  font-weight: 900;
+  font-size: 1rem;
+  margin: 0 4px 8px;
+}
+
+.tk-picker__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(12.5rem, 1fr));
+  gap: 8px;
+}
+
+.tk-wpn {
+  position: relative;
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  grid-template-rows: auto auto;
+  column-gap: 10px;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 16px;
+  border: 1px solid var(--glass-line);
+  background: rgb(255 255 255 / 0.06);
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--g92-dur-2), transform var(--g92-dur-1);
+}
+
+.tk-wpn:hover {
+  background: rgb(255 255 255 / 0.14);
+}
+
+.tk-wpn:active {
+  transform: scale(0.97);
+}
+
+.tk-wpn.is-selected {
+  background: color-mix(in oklab, var(--accent) 35%, transparent);
+  border-color: color-mix(in oklab, var(--accent) 70%, #fff);
+}
+
+.tk-wpn__icon {
+  grid-row: 1 / 3;
+  width: 40px;
+  height: 40px;
+  display: grid;
+}
+
+.tk-wpn__icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.tk-wpn__name {
+  font-weight: 800;
+}
+
+.tk-wpn__desc {
+  grid-column: 2 / 4;
+  font-size: 0.78rem;
+  opacity: 0.78;
+  line-height: 1.25;
+}
+
+.tk-wpn__ammo {
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.tk-wpn__key {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  font: 800 0.65rem/1 var(--g92-font);
+  padding: 2px 4px;
+  border-radius: 5px;
+  background: rgb(0 0 0 / 0.45);
+  color: #fff;
+}
+
+html[data-input='touch'] .tk-wpn__key {
+  display: none;
+}
+
+/* ---- touch / small screens ---- */
+html[data-input='touch'] .tk-hold {
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+}
+
+html[data-input='touch'] .tk-fire {
+  min-height: 64px;
+  padding: 0 26px;
+  font-size: 1.4rem;
+  border-radius: 22px;
+}
+
+@media (max-width: 860px) {
+  .tk-weapon {
+    min-width: 0;
+  }
+  .tk-weapon__name,
+  .tk-weapon__more {
+    display: none;
+  }
+  .tk-readout {
+    min-width: 3.6rem;
+  }
+  .tk-label {
+    font-size: 0.6rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .tk-controls {
+    flex-wrap: wrap;
+    justify-content: center;
+    row-gap: 6px;
+  }
+  .tk-ctrl--drive .tk-readout {
+    display: none;
+  }
+  .tk-pill {
+    height: 30px;
+    padding: 0 9px 0 8px;
+    font-size: 0.78rem;
+  }
+  .tk-pill__name {
+    max-width: 4.5rem;
+  }
+  .tk-pill__hp {
+    width: 40px;
+  }
+  .tk-pill--foe .tk-pill__name {
+    display: none;
+  }
+  .tk-counter,
+  .tk-wind {
+    height: 30px;
+    padding: 0 9px;
+    font-size: 0.85rem;
+  }
+  .tk-iconbtn {
+    width: 40px;
+    height: 40px;
+    border-radius: 14px;
+  }
+  .tk-top {
+    flex-wrap: wrap;
+  }
+  .tk-right {
+    order: 2;
+  }
+  .tk-players {
+    order: 3;
+    flex-basis: 100%;
+  }
+  .tk-hint {
+    bottom: calc(max(12px, env(safe-area-inset-bottom, 0px)) + 150px);
+    font-size: 0.9rem;
+  }
+}
+
+/* landscape phones: compact everything, keep the battlefield visible */
+@media (max-height: 540px) {
+  .tk-top {
+    top: max(6px, env(safe-area-inset-top, 0px));
+  }
+  .tk-pill {
+    height: 28px;
+    font-size: 0.75rem;
+  }
+  .tk-counter,
+  .tk-wind {
+    height: 28px;
+    font-size: 0.8rem;
+  }
+  .tk-iconbtn {
+    width: 38px;
+    height: 38px;
+  }
+  .tk-dock {
+    left: auto;
+    right: max(8px, env(safe-area-inset-right, 0px));
+    transform: none;
+    bottom: max(6px, env(safe-area-inset-bottom, 0px));
+    justify-items: end;
+  }
+  .tk-controls {
+    padding: 6px;
+    gap: 6px;
+    border-radius: 20px;
+  }
+  html[data-input='touch'] .tk-hold {
+    width: 48px;
+    height: 48px;
+  }
+  html[data-input='touch'] .tk-fire {
+    min-height: 54px;
+  }
+  .tk-hint {
+    bottom: auto;
+    top: 52px;
+    font-size: 0.85rem;
+    padding: 6px 12px;
+  }
+  .tk-banner {
+    top: 16%;
+  }
+  .tk-picker {
+    bottom: 76px;
+    max-height: 70%;
+  }
+}
+
+/* ==========================================================================
+   Screens (overlays built with kit classes)
+   ========================================================================== */
+.tk-panel--wide {
+  width: min(100%, 58rem);
+}
+
+.tk-screen--home {
+  background: linear-gradient(180deg, rgb(6 10 24 / 0.1), rgb(6 10 24 / 0.35));
+}
+
+.tk-screen--home .tk-panel {
+  background: color-mix(in oklab, var(--g92-surface) 84%, transparent);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  gap: var(--g92-space-5);
+}
+
+.tk-hero {
+  display: flex;
+  align-items: center;
+  gap: var(--g92-space-5);
+  text-align: left;
+}
+
+.tk-hero__icon {
+  width: 88px;
+  height: 88px;
+  flex: none;
+}
+
+.tk-hero__title {
+  font-size: var(--g92-fs-display);
+}
+
+.tk-hero .g92-overlay__subtitle {
+  margin-top: 0;
+}
+
+.tk-modes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--g92-space-3);
+  width: 100%;
+}
+
+.tk-mode {
+  --mc: var(--accent);
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: 1fr auto;
+  column-gap: var(--g92-space-4);
+  row-gap: var(--g92-space-2);
+  align-items: center;
+  padding: var(--g92-space-4) var(--g92-space-5);
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  border: 1px solid var(--g92-border);
+  min-height: 7.5rem;
+}
+
+.tk-mode--primary {
+  background: linear-gradient(135deg, color-mix(in oklab, var(--mc) 16%, var(--g92-surface)), var(--g92-surface));
+  border-color: color-mix(in oklab, var(--mc) 45%, transparent);
+}
+
+.tk-mode__icon {
+  grid-row: 1 / 3;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  color: #fff;
+  background: linear-gradient(145deg, color-mix(in oklab, var(--mc) 70%, #fff), var(--mc) 60%, color-mix(in oklab, var(--mc) 75%, #000));
+  box-shadow: inset 0 -4px 0 rgb(0 0 0 / 0.15), 0 10px 20px -10px var(--mc);
+}
+
+.tk-mode__icon svg {
+  width: 34px;
+  height: 34px;
+}
+
+.tk-mode__body {
+  display: grid;
+  gap: 2px;
+}
+
+.tk-mode__title {
+  font-size: var(--g92-fs-xl);
+  font-weight: var(--g92-fw-black);
+  line-height: 1.1;
+}
+
+.tk-mode__desc {
+  color: var(--g92-text-muted);
+  font-weight: var(--g92-fw-medium);
+  line-height: 1.3;
+}
+
+.tk-mode__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  justify-self: start;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--g92-surface-2);
+  font-weight: var(--g92-fw-bold);
+  font-size: var(--g92-fs-sm);
+  color: var(--g92-text-muted);
+}
+
+.tk-mode__meta svg {
+  width: 18px;
+  height: 18px;
+}
+
+.tk-mode__meta svg:first-child {
+  color: var(--g92-gold);
+}
+
+.tk-mode__meta b {
+  color: var(--g92-text);
+}
+
+.tk-home__foot {
+  display: flex;
+  justify-content: center;
+  gap: var(--g92-space-2);
+}
+
+@media (max-width: 640px) {
+  .tk-modes {
+    grid-template-columns: 1fr;
+  }
+  .tk-mode {
+    min-height: 0;
+    padding: var(--g92-space-3) var(--g92-space-4);
+  }
+  .tk-mode__icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+  }
+  .tk-hero__icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 20px;
+  }
+}
+
+@media (max-height: 540px) and (min-width: 641px) {
+  .tk-modes {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .tk-mode {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+    padding: var(--g92-space-3);
+  }
+  .tk-mode__icon {
+    grid-row: auto;
+    width: 48px;
+    height: 48px;
+  }
+  .tk-mode__desc {
+    display: none;
+  }
+  .tk-mode__meta {
+    justify-self: center;
+  }
+  .tk-hero__icon {
+    display: none;
+  }
+}
+
+/* ---- screen headers ---- */
+.tk-head {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  width: 100%;
+  gap: var(--g92-space-3);
+}
+
+.tk-head .tk-back {
+  justify-self: start;
+}
+
+.tk-head__title {
+  font-size: var(--g92-fs-3xl);
+  font-weight: var(--g92-fw-black);
+}
+
+.tk-head__stars {
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: var(--g92-fw-bold);
+  color: var(--g92-text-muted);
+}
+
+.tk-head__stars svg {
+  width: 22px;
+  height: 22px;
+  color: var(--g92-gold);
+}
+
+.tk-head__stars b {
+  color: var(--g92-text);
+  font-size: var(--g92-fs-lg);
+}
+
+/* ---- campaign ---- */
+.tk-worlds {
+  display: grid;
+  gap: var(--g92-space-3);
+  width: 100%;
+}
+
+.tk-world {
+  --w1: #5fb8f5;
+  --w2: #e9f7ff;
+  --wg: #4caf50;
+  display: grid;
+  grid-template-columns: 9rem 1fr;
+  align-items: center;
+  gap: var(--g92-space-3);
+  padding: var(--g92-space-3);
+  border-radius: var(--g92-radius-xl);
+  background: linear-gradient(180deg, color-mix(in oklab, var(--w1) 30%, var(--g92-surface-2)), color-mix(in oklab, var(--w2) 20%, var(--g92-surface-2)));
+  border-bottom: 5px solid var(--wg);
+  text-align: left;
+}
+
+.tk-world__title {
+  display: flex;
+  align-items: center;
+  gap: var(--g92-space-2);
+  font-size: var(--g92-fs-lg);
+}
+
+.tk-world__num {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--g92-surface);
+  font-size: var(--g92-fs-sm);
+}
+
+.tk-levels {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--g92-space-2);
+}
+
+.tk-level {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  column-gap: var(--g92-space-2);
+  align-items: center;
+  padding: var(--g92-space-2) var(--g92-space-3);
+  min-height: 3.6rem;
+  border-radius: var(--g92-radius-lg);
+  border: 1px solid var(--g92-border);
+  background: var(--g92-surface);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: var(--g92-shadow-1);
+  transition: transform var(--g92-dur-2) var(--g92-ease-spring), box-shadow var(--g92-dur-2);
+}
+
+.tk-level:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: var(--g92-shadow-2);
+}
+
+.tk-level:focus-visible {
+  outline: 3px solid var(--g92-focus);
+  outline-offset: 2px;
+}
+
+.tk-level.is-next {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+  animation: tk-glow 1.8s ease-in-out infinite;
+}
+
+@keyframes tk-glow {
+  50% {
+    box-shadow: 0 0 0 6px var(--accent-glow);
+  }
+}
+
+.tk-level.is-locked {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.tk-level__num {
+  grid-row: 1 / 3;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-weight: var(--g92-fw-black);
+}
+
+.tk-level__name {
+  font-weight: var(--g92-fw-bold);
+  font-size: var(--g92-fs-sm);
+  line-height: 1.15;
+}
+
+.tk-level__stars .g92-stars {
+  font-size: 0.9rem;
+}
+
+.tk-level__lock {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  color: var(--g92-text-subtle);
+}
+
+@media (max-width: 720px) {
+  .tk-world {
+    grid-template-columns: 1fr;
+  }
+  .tk-levels {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---- level intro extra ---- */
+.tk-intro-wrap {
+  display: grid;
+  gap: var(--g92-space-3);
+  width: 100%;
+  justify-items: center;
+}
+
+.tk-intro {
+  display: grid;
+  gap: var(--g92-space-3);
+  width: 100%;
+  text-align: left;
+}
+
+.tk-intro__tip {
+  padding: var(--g92-space-3) var(--g92-space-4);
+  border-radius: var(--g92-radius-lg);
+  background: color-mix(in oklab, var(--g92-gold) 16%, var(--g92-surface));
+  font-weight: var(--g92-fw-medium);
+}
+
+.tk-intro__cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--g92-space-3);
+}
+
+.tk-enemies {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: var(--g92-space-2);
+  margin-top: var(--g92-space-1);
+}
+
+.tk-enemy {
+  display: flex;
+  align-items: center;
+  gap: var(--g92-space-2);
+}
+
+.tk-enemy__icon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  padding: 3px;
+  border-radius: 12px;
+  background: var(--g92-surface-2);
+}
+
+.tk-enemy__icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.tk-enemy__text {
+  display: grid;
+  line-height: 1.2;
+}
+
+.tk-enemy__text small {
+  color: var(--g92-text-muted);
+}
+
+.tk-loadout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: var(--g92-space-1);
+}
+
+.tk-loadout__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px 4px 4px;
+  border-radius: 12px;
+  background: var(--g92-surface-2);
+  font-size: var(--g92-fs-sm);
+}
+
+.tk-loadout__item span {
+  display: grid;
+  width: 26px;
+  height: 26px;
+}
+
+.tk-loadout__item svg {
+  width: 100%;
+  height: 100%;
+}
+
+.tk-intro__par {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  justify-content: center;
+  color: var(--g92-text-muted);
+  font-size: var(--g92-fs-sm);
+}
+
+.tk-intro__par svg {
+  width: 16px;
+  height: 16px;
+  color: var(--g92-gold);
+}
+
+.tk-intro__par b {
+  color: var(--g92-text);
+  margin: 0 0.25em;
+}
+
+@media (max-width: 520px) {
+  .tk-intro__cols {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---- duel setup ---- */
+.tk-screen--duel .tk-panel {
+  justify-items: stretch;
+  text-align: left;
+}
+
+.tk-screen--duel .g92-eyebrow {
+  margin-bottom: calc(-1 * var(--g92-space-2));
+}
+
+.tk-slots {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--g92-space-3);
+}
+
+.tk-slot {
+  --c: #ff4b4b;
+  display: grid;
+  gap: var(--g92-space-2);
+  padding: var(--g92-space-3);
+  border-radius: var(--g92-radius-xl);
+  border: 2px solid color-mix(in oklab, var(--c) 55%, transparent);
+  background: color-mix(in oklab, var(--c) 8%, var(--g92-surface));
+  transition: opacity var(--g92-dur-2), filter var(--g92-dur-2);
+}
+
+.tk-slot.is-off {
+  opacity: 0.6;
+  filter: grayscale(0.7);
+  border-style: dashed;
+}
+
+.tk-slot__head {
+  display: flex;
+  align-items: center;
+  gap: var(--g92-space-2);
+  font-size: var(--g92-fs-lg);
+}
+
+.tk-slot__tank {
+  display: grid;
+  width: 44px;
+  height: 44px;
+}
+
+.tk-slot__tank svg {
+  width: 100%;
+  height: 100%;
+}
+
+.tk-slot__seg {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  width: 100%;
+}
+
+.tk-slot__seg button {
+  display: grid;
+  justify-items: center;
+  gap: 1px;
+  padding: 6px 2px;
+  font-size: 0.72rem;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.tk-slot__seg button svg {
+  width: 20px;
+  height: 20px;
+}
+
+.tk-slot__guide {
+  display: flex;
+  align-items: center;
+  gap: var(--g92-space-2);
+  font-weight: var(--g92-fw-medium);
+  font-size: var(--g92-fs-sm);
+  cursor: pointer;
+}
+
+.tk-slot__guide[hidden] {
+  display: none;
+}
+
+.tk-slot__guide > span:first-child {
+  display: grid;
+  width: 22px;
+  height: 22px;
+}
+
+.tk-slot__guide input {
+  margin-left: auto;
+}
+
+.tk-opts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--g92-space-3) var(--g92-space-4);
+}
+
+.tk-opt .g92-segmented {
+  flex-wrap: wrap;
+}
+
+.tk-warn {
+  color: var(--g92-danger);
+  font-weight: var(--g92-fw-bold);
+  text-align: center;
+}
+
+.tk-warn[hidden] {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .tk-slots,
+  .tk-opts {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---- rewards ---- */
+.tk-rewards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: var(--g92-space-3);
+  width: 100%;
+}
+
+.tk-reward {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: var(--g92-space-1);
+  padding: var(--g92-space-4) var(--g92-space-3);
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  border: 1px solid var(--g92-border);
+}
+
+.tk-reward__icon {
+  display: grid;
+  width: 56px;
+  height: 56px;
+}
+
+.tk-reward__icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.tk-reward__title {
+  font-size: var(--g92-fs-lg);
+}
+
+.tk-reward__desc {
+  color: var(--g92-text-muted);
+  font-size: var(--g92-fs-sm);
+  line-height: 1.3;
+}
+
+.tk-reward .g92-kbd {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+}
+
+html[data-input='touch'] .tk-reward .g92-kbd {
+  display: none;
+}
+
+/* ---- results table ---- */
+.tk-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.tk-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.tk-table th {
+  font-size: var(--g92-fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--g92-text-muted);
+  font-weight: var(--g92-fw-bold);
+  padding: 4px 8px;
+}
+
+.tk-table td {
+  padding: 8px;
+  border-top: 1px solid var(--g92-border);
+  font-weight: var(--g92-fw-bold);
+}
+
+.tk-table td:first-child,
+.tk-table th:first-child {
+  text-align: left;
+}
+
+.tk-dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--c);
+  margin-right: 8px;
+  vertical-align: -1px;
+}
+
+/* ---- help ---- */
+.tk-help {
+  display: grid;
+  gap: var(--g92-space-5);
+}
+
+.tk-help__sec h3 {
+  margin-bottom: var(--g92-space-2);
+}
+
+.tk-help__list,
+.tk-help__weapons {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: var(--g92-space-2);
+}
+
+.tk-help__list li,
+.tk-help__weapons li {
+  display: flex;
+  align-items: center;
+  gap: var(--g92-space-3);
+  line-height: 1.35;
+}
+
+.tk-help__list li > svg,
+.tk-help__wicon {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  display: grid;
+}
+
+.tk-help__list li > svg {
+  color: var(--accent-text);
+}
+
+.tk-help__wicon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.tk-help__weapons {
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+}
+
+.tk-help .g92-howto {
+  margin: 0;
+}
+
+/* ---- settings extra ---- */
+.tk-settings {
+  display: grid;
+  gap: var(--g92-space-3);
+}
+
+.tk-settings__title {
+  font-size: var(--g92-fs-lg);
+  padding-top: var(--g92-space-2);
+  border-top: 1px solid var(--g92-border);
+}
+
+.tk-intro-back {
+  justify-self: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tk-level.is-next,
+  .tk-turn__dot {
+    animation: none;
+  }
+}
