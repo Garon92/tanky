@@ -453,7 +453,7 @@ export class World {
     const craterR = radius * (kind === 'death' ? 0.7 : 0.85);
     this.terrain.crater(x, y, craterR);
     const ownerTank = this.tankById(owner);
-    const mul = ownerTank ? ownerTank.def.damageMul : 1;
+    const mul = ownerTank ? ownerTank.def.damageMul * ownerTank.dmgMul : 1;
     let directHit = false;
     for (const t of this.tanks) {
       if (!t.alive || t.hp <= 0) continue;

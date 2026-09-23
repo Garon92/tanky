@@ -70,6 +70,7 @@ export function buildLevel(def: LevelDef, difficulty: BotLevel, playerName: stri
     const t = new Tank({ x: e.x, team: 1, kind: e.kind, control: e.kind === 'dummy' ? 'passive' : 'bot', botLevel: difficulty, inventory: e.weapons });
     t.maxHp = Math.round(t.maxHp * hpMul);
     t.hp = t.maxHp;
+    t.dmgMul = difficulty === 'easy' ? 0.7 : difficulty === 'hard' ? 1.1 : 0.9;
     t.angle = e.x > def.player.x ? 135 : 45;
     return world.addTank(t);
   });

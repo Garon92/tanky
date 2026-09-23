@@ -56,9 +56,9 @@ export const TANK_KINDS: Record<TankKind, TankKindDef> = {
     desc: 'Malý a ještě se učí mířit.',
     hp: 60,
     scale: 0.85,
-    aimError: 1.6,
+    aimError: 2,
     preferAngle: [35, 60],
-    damageMul: 0.8,
+    damageMul: 0.7,
     fuel: 60,
     loadout: { shell: INFINITE },
     look: 'light',
@@ -112,7 +112,7 @@ export const TANK_KINDS: Record<TankKind, TankKindDef> = {
     desc: 'Míří velmi přesně, ale vydrží málo.',
     hp: 75,
     scale: 0.95,
-    aimError: 0.45,
+    aimError: 0.6,
     preferAngle: [12, 45],
     damageMul: 1,
     fuel: 80,
@@ -204,6 +204,8 @@ export class Tank {
   lastHitBy = -1;
   /** Round wins (duel). */
   wins = 0;
+  /** Extra damage multiplier (campaign difficulty). */
+  dmgMul = 1;
 
   constructor(opts: {
     x: number;

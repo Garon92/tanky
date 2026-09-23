@@ -15,5 +15,10 @@ export default defineConfig({
       }),
     ),
   ],
-  test: { environment: 'node', include: ['tests/**/*.test.ts'] },
+  test: {
+    environment: 'node',
+    include: ['tests/**/*.test.ts'],
+    // bot balance statistics – run with `SLOW=1 npx vitest run tests/balance.slow.test.ts`
+    exclude: process.env.SLOW ? [] : ['tests/**/*.slow.test.ts'],
+  },
 });

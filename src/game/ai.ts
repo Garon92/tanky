@@ -38,9 +38,9 @@ export interface BotMemory {
 }
 
 export const LEVEL_PARAMS: Record<BotLevel, { angleSd: number; powerSd: number; floor: number; learn: number; think: number; special: number; adjustSpeed: number }> = {
-  easy: { angleSd: 5.5, powerSd: 6.5, floor: 0.55, learn: 0.8, think: 0.9, special: 0.25, adjustSpeed: 0.55 },
-  normal: { angleSd: 2.8, powerSd: 3.2, floor: 0.3, learn: 0.7, think: 0.6, special: 0.45, adjustSpeed: 0.8 },
-  hard: { angleSd: 1.2, powerSd: 1.4, floor: 0.12, learn: 0.55, think: 0.4, special: 0.65, adjustSpeed: 1 },
+  easy: { angleSd: 7, powerSd: 8, floor: 0.75, learn: 0.9, think: 0.9, special: 0.25, adjustSpeed: 0.55 },
+  normal: { angleSd: 4.4, powerSd: 5, floor: 0.5, learn: 0.8, think: 0.6, special: 0.4, adjustSpeed: 0.8 },
+  hard: { angleSd: 1.4, powerSd: 1.7, floor: 0.15, learn: 0.6, think: 0.4, special: 0.65, adjustSpeed: 1 },
 };
 
 interface Shooter {
