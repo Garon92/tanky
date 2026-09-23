@@ -265,6 +265,15 @@ export const LEVELS: LevelDef[] = [
 
 export const levelById = (id: number): LevelDef | undefined => LEVELS.find((l) => l.id === id);
 
+/** Highest playable level: one past the furthest level that has at least one star. */
+export function unlockedLevel(stars: readonly number[]): number {
+  let last = 0;
+  stars.forEach((s, i) => {
+    if ((s ?? 0) > 0) last = i + 1;
+  });
+  return Math.min(LEVELS.length, last + 1);
+}
+
 /** Stars for a won level: 3 = at most par shots, 2 = at most 1.5 × par, 1 = any win. */
 export function starsFor(shots: number, par: number, won: boolean): number {
   if (!won) return 0;

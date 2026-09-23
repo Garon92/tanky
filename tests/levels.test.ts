@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { SIM_DT, WORLD_W } from '../src/game/constants';
-import { levelById, LEVELS, starsFor, WORLDS } from '../src/game/levels';
+import { levelById, LEVELS, starsFor, unlockedLevel, WORLDS } from '../src/game/levels';
 import { buildLevel } from '../src/game/mapgen';
 import { Match } from '../src/game/match';
 import { CampaignMode } from '../src/game/modes';
@@ -28,6 +28,13 @@ describe('campaign levels', () => {
     }
     expect(def.par).toBeGreaterThan(0);
     expect(def.tip.length).toBeGreaterThan(10);
+  });
+
+  it('unlocks one level past the furthest completed one', () => {
+    expect(unlockedLevel([])).toBe(1);
+    expect(unlockedLevel([3, 1])).toBe(3);
+    expect(unlockedLevel([0, 0, 0, 0, 2])).toBe(6);
+    expect(unlockedLevel(new Array(LEVELS.length).fill(3))).toBe(LEVELS.length);
   });
 
   it('stars follow the par rule', () => {

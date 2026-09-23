@@ -1,6 +1,6 @@
 import type { Difficulty, DuelSlotSave, Save } from '../core/storage';
 import { BIOME_ORDER, BIOMES } from '../game/biomes';
-import { levelById, LEVELS, WORLDS, type LevelDef } from '../game/levels';
+import { levelById, LEVELS, unlockedLevel, WORLDS, type LevelDef } from '../game/levels';
 import type { RewardOption } from '../game/match';
 import { BADGES } from '../game/badges';
 import { TANK_KINDS, TEAM_COLORS, TEAM_NAMES } from '../game/tank';
@@ -116,7 +116,7 @@ export function showHome(save: Save): Screen<HomeChoice> {
   const d = save.data;
   const stars = save.totalStars;
   const maxStars = LEVELS.length * 3;
-  const nextLevel = Math.min(LEVELS.length, d.campaign.stars.filter((n) => n > 0).length + 1);
+  const nextLevel = unlockedLevel(d.campaign.stars);
 
   const hero = h(
     'div',
@@ -178,7 +178,7 @@ export function showHome(save: Save): Screen<HomeChoice> {
 export function showCampaign(save: Save): Screen<number | null> {
   const s = screen<number | null>('campaign', { backdrop: 'blur', wide: true, onEsc: null });
   const d = save.data.campaign;
-  const unlockedUpTo = Math.min(LEVELS.length, d.stars.filter((n) => n > 0).length + 1);
+  const unlockedUpTo = unlockedLevel(d.stars);
   const head = h(
     'div',
     { class: 'tk-head' },

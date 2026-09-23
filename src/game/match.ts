@@ -93,6 +93,14 @@ export abstract class Mode {
   rewardOptions(): RewardOption[] {
     return [];
   }
+  /** True when the battle is already decided (e.g. the last enemy fell to a crate or fall) – resolves the turn early. */
+  decided(): boolean {
+    const w = this.match.world;
+    if (!w) return false;
+    const teams = new Set(w.tanks.filter((t) => t.alive && t.hp > 0 && t.control !== 'passive').map((t) => t.team));
+    const passives = w.tanks.some((t) => t.alive && t.hp > 0 && t.control === 'passive');
+    return teams.size <= 1 && !passives && w.tanks.length > 1;
+  }
   chooseReward(_i: number): void {}
   /** Seconds to wait in `intro` before the first turn. */
   introTime(): number {
@@ -210,7 +218,8 @@ export class Match {
         break;
       case 'aim': {
         const t = this.active;
-        if (!t || !t.alive || t.hp <= 0) {
+        if (!t || !t.alive || t.hp <= 0 || (this.phaseT > 0.3 && !this.world.isBusy() && this.mode.decided())) {
+          this.turnShooter = null;
           this.setPhase('flight');
           break;
         }
