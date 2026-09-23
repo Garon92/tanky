@@ -17,16 +17,17 @@ export class Backdrop {
   private key = '';
 
   get(biome: Biome, cam: Camera, seed: number): HTMLCanvasElement {
-    const key = `${biome.id}|${cam.cssW}x${cam.cssH}@${cam.dpr}|${seed}|${cam.offY.toFixed(1)}|${cam.scale.toFixed(4)}`;
+    const key = `${biome.id}|${cam.cssW}x${cam.cssH}@${cam.dpr}|${seed}|${cam.offY.toFixed(1)}|${cam.scale.toFixed(4)}|${cam.margin.toFixed(1)}`;
     if (this.canvas && key === this.key) return this.canvas;
     this.key = key;
-    const c = this.canvas && this.canvas.width === Math.round(cam.cssW * cam.dpr) && this.canvas.height === Math.round(cam.cssH * cam.dpr) ? this.canvas : makeCanvas(cam.cssW * cam.dpr, cam.cssH * cam.dpr);
+    const size = cam.stripSize;
+    const c = this.canvas && this.canvas.width === size.w && this.canvas.height === size.h ? this.canvas : makeCanvas(size.w, size.h);
     this.canvas = c;
     const ctx = c.getContext('2d') as CanvasRenderingContext2D;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, c.width, c.height);
-    cam.applyWorld(ctx, false);
-    const v = cam.view;
+    cam.applyStrip(ctx);
+    const v = cam.strip;
     const rng = new Rng(seed);
 
     // sky
@@ -182,17 +183,16 @@ export class TerrainLayer {
   private key = '';
 
   get(terrain: Terrain, biome: Biome, cam: Camera, seed: number): HTMLCanvasElement {
-    const key = `${terrain.version}|${biome.id}|${cam.cssW}x${cam.cssH}@${cam.dpr}|${seed}|${terrain.heights.length}|${cam.offY.toFixed(1)}|${cam.scale.toFixed(4)}`;
+    const key = `${terrain.version}|${biome.id}|${cam.cssW}x${cam.cssH}@${cam.dpr}|${seed}|${terrain.heights.length}|${cam.offY.toFixed(1)}|${cam.scale.toFixed(4)}|${cam.margin.toFixed(1)}`;
     if (this.canvas && key === this.key && this.lastTerrain === terrain) return this.canvas;
     this.key = key;
     this.lastTerrain = terrain;
-    const W = Math.round(cam.cssW * cam.dpr);
-    const H = Math.round(cam.cssH * cam.dpr);
+    const { w: W, h: H } = cam.stripSize;
     if (!this.canvas || this.canvas.width !== W || this.canvas.height !== H) this.canvas = makeCanvas(W, H);
     const ctx = this.canvas.getContext('2d') as CanvasRenderingContext2D;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, W, H);
-    cam.applyWorld(ctx, false);
+    cam.applyStrip(ctx);
     drawTerrain(ctx, terrain, biome, cam, seed);
     return this.canvas;
   }
@@ -212,7 +212,7 @@ function surfacePath(ctx: CanvasRenderingContext2D, terrain: Terrain, x0: number
 }
 
 export function drawTerrain(ctx: CanvasRenderingContext2D, terrain: Terrain, biome: Biome, cam: Camera, seed: number): void {
-  const v = cam.view;
+  const v = cam.strip;
   const x0 = Math.min(0, v.x0) - 20;
   const x1 = Math.max(terrain.w, v.x1) + 20;
   const bottom = Math.max(WORLD_H, v.y1) + 20;

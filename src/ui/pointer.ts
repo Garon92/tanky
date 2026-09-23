@@ -36,7 +36,11 @@ export class PointerAim {
     if (!m || !m.isHumanTurn || this.id !== null) return;
     if (e.button !== 0 && e.pointerType === 'mouse') return;
     this.id = e.pointerId;
-    this.canvas.setPointerCapture(e.pointerId);
+    try {
+      this.canvas.setPointerCapture(e.pointerId);
+    } catch {
+      /* pointer already gone (or synthetic) – aiming still works without capture */
+    }
     e.preventDefault();
     this.apply(e);
   };

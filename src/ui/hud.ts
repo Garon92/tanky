@@ -101,7 +101,11 @@ export class Hud {
       };
       b.addEventListener('pointerdown', (e) => {
         e.preventDefault();
-        b.setPointerCapture(e.pointerId);
+        try {
+          b.setPointerCapture(e.pointerId);
+        } catch {
+          /* ignore */
+        }
         this.input.setHold(a, src, true);
         b.classList.add('is-down');
       });

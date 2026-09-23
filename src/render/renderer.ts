@@ -82,6 +82,38 @@ export class Renderer {
     this.sceneSeed = (match.world.rng.int(1, 1e9) ^ (match.round * 7919)) >>> 0;
     this.syncFlairCtx(match);
     this.flair.warmup(this.flairCtx, 5);
+    if (this.cam.zoomed) this.cam.snap(this.focusX(match));
+  }
+
+  private holdFocus = WORLD_W / 2;
+
+  /** Where the camera should look when zoomed in (phones): shot in flight, else the active tank + its target. */
+  private focusX(match: Match): number {
+    const w = match.world;
+    const cam = this.cam;
+    const p = w.projectiles[0];
+    if (p) {
+      this.holdFocus = p.x;
+      return p.x;
+    }
+    if (match.phase === 'flight' || match.phase === 'roundEnd' || match.phase === 'over') return this.holdFocus;
+    const t = match.active ?? w.tanks.find((x) => x.control === 'human') ?? w.tanks[0];
+    if (!t) return WORLD_W / 2;
+    const reach = cam.viewW * 0.36;
+    let target = t.x + t.facing * reach * 0.6;
+    // don't move the world under the finger while aiming by drag
+    if (this.pointer.active && match.isHumanTurn) return this.holdFocus;
+    {
+      // look toward the nearest enemy, keeping the active tank on screen
+      const foes = w.tanks.filter((o) => o.alive && o.team !== t.team);
+      if (foes.length) {
+        const near = foes.reduce((a, b) => (Math.abs(b.x - t.x) < Math.abs(a.x - t.x) ? b : a));
+        target = (t.x + near.x) / 2;
+      }
+    }
+    target = Math.min(t.x + reach, Math.max(t.x - reach, target));
+    this.holdFocus = target;
+    return target;
   }
 
   private syncFlairCtx(match: Match): void {
@@ -209,6 +241,7 @@ export class Renderer {
     const biome = BIOMES[w.biome];
     const fdt = paused ? 0 : dt;
     this.time += fdt;
+    if (cam.zoomed) cam.follow(this.focusX(match));
     cam.update(fdt);
     this.fx.update(fdt, w.terrain);
     this.syncFlairCtx(match);
@@ -227,14 +260,17 @@ export class Renderer {
     }
 
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.drawImage(this.backdrop.get(biome, cam, this.sceneSeed), 0, 0);
+    // clear first: when zoomed the strip caches still cover the screen, but be safe at edges
+    ctx.fillStyle = biome.sky[2];
+    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    ctx.drawImage(this.backdrop.get(biome, cam, this.sceneSeed), Math.round(cam.stripX), 0);
     cam.applyWorld(ctx);
     this.flair.drawBack(ctx, this.flairCtx);
 
     // terrain (cached; shake applied as offset)
     const layer = this.terrainLayer.get(w.terrain, biome, cam, this.sceneSeed);
-    ctx.setTransform(1, 0, 0, 1, cam.shakeX * cam.dpr, cam.shakeY * cam.dpr);
-    ctx.drawImage(layer, 0, 0);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.drawImage(layer, Math.round(cam.stripX + cam.shakeX * cam.dpr), Math.round(cam.shakeY * cam.dpr));
     cam.applyWorld(ctx);
     this.fx.drawTreads(ctx, w.terrain);
     this.flair.drawGround(ctx, this.flairCtx);
