@@ -280,7 +280,14 @@ export function drawTerrain(ctx: CanvasRenderingContext2D, terrain: Terrain, bio
 
   // bedrock
   ctx.fillStyle = 'rgba(0,0,0,0.35)';
-  ctx.fillRect(x0, BEDROCK_Y + 2, x1 - x0, bottom - BEDROCK_Y);
+  ctx.fillRect(x0, BEDROCK_Y + 2, x1 - x0, 12);
+  // below the world (portrait screens): plain deep ground
+  if (bottom > WORLD_H + 20) {
+    ctx.fillStyle = biome.ground[1];
+    ctx.fillRect(x0, BEDROCK_Y + 14, x1 - x0, bottom - BEDROCK_Y);
+    ctx.fillStyle = 'rgba(0,0,0,0.18)';
+    ctx.fillRect(x0, BEDROCK_Y + 14, x1 - x0, bottom - BEDROCK_Y);
+  }
 
   // top layer where the ground is undisturbed; crater rims elsewhere
   // a column keeps its grass/snow only if neither it nor its close neighbours were dug out or buried

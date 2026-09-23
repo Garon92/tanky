@@ -40,7 +40,7 @@ export class Camera {
     const availH = Math.max(1, this.cssH - this.insetTop - this.insetBottom);
     this.fitScale = Math.min(this.cssW / WORLD_W, availH / WORLD_H);
     // phones: zoom towards a comfortable minimum scale (at most 1.7×)
-    const zoom = this.allowZoom && this.fitScale < 0.52 ? Math.min(1.7, 0.55 / this.fitScale) : 1;
+    const zoom = this.allowZoom && this.fitScale < 0.46 ? Math.min(1.7, 0.55 / this.fitScale) : 1;
     this.scale = this.fitScale * zoom;
     this.margin = Math.max(40, (this.cssW - WORLD_W * this.scale) / 2 / this.scale + 20);
     // anchor the world to the bottom of the free area: extra space goes to the sky (or the sky is cropped)
