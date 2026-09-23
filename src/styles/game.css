@@ -1793,3 +1793,63 @@ html[data-input='touch'] .tk-reward .g92-kbd {
     font-size: 0.9rem;
   }
 }
+
+/* ---- badges & stats dialog ---- */
+.tk-statsdlg {
+  display: grid;
+  gap: var(--g92-space-3);
+}
+
+.tk-badges {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: var(--g92-space-2);
+}
+
+.tk-badge {
+  display: flex;
+  align-items: center;
+  gap: var(--g92-space-3);
+  padding: var(--g92-space-2) var(--g92-space-3);
+  border-radius: var(--g92-radius-lg);
+  background: var(--g92-surface-2);
+  opacity: 0.6;
+}
+
+.tk-badge.is-got {
+  opacity: 1;
+  background: color-mix(in oklab, var(--g92-gold) 14%, var(--g92-surface));
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--g92-gold) 45%, transparent);
+}
+
+.tk-badge__icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--g92-surface);
+  font-size: 1.6rem;
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', var(--g92-font);
+}
+
+.tk-badge:not(.is-got) .tk-badge__icon {
+  filter: grayscale(1);
+  font-size: 1.1rem;
+}
+
+.tk-badge__text {
+  display: grid;
+  line-height: 1.2;
+}
+
+.tk-badge__text small {
+  color: var(--g92-text-muted);
+}
+
+.tk-stats {
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+}

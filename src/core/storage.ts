@@ -28,6 +28,7 @@ export interface SaveData {
   };
   prefs: { guide: GuideLength; shake: boolean; hints: boolean };
   stats: { shots: number; hits: number; kills: number; games: number; wins: number };
+  badges: string[];
   seenHelp: boolean;
 }
 
@@ -51,6 +52,7 @@ export const defaultSave = (): SaveData => ({
   },
   prefs: { guide: 'short', shake: true, hints: true },
   stats: { shots: 0, hits: 0, kills: 0, games: 0, wins: 0 },
+  badges: [],
   seenHelp: false,
 });
 

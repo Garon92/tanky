@@ -5,6 +5,7 @@ import { Sound } from './audio/sound';
 import { SIM_DT } from './game/constants';
 import { levelById, LEVELS } from './game/levels';
 import { Match, type ResultData, type RewardOption } from './game/match';
+import { BadgeTracker } from './game/badges';
 import { CampaignMode, DemoMode, DuelMode, SurvivalMode, TargetsMode, type DuelConfig } from './game/modes';
 import type { BiomeId } from './game/types';
 import { Renderer } from './render/renderer';
@@ -23,6 +24,7 @@ import {
   helpContent,
   levelIntroExtra,
   settingsExtra,
+  statsContent,
   showCampaign,
   showDuelSetup,
   showHome,
@@ -41,6 +43,7 @@ export class App {
   readonly hud: Hud;
   readonly pointer: PointerAim;
   readonly loop: FixedLoop;
+  readonly badges: BadgeTracker;
   private demo!: Match;
   private match: Match | null = null;
   private spec: Spec | null = null;
@@ -66,6 +69,13 @@ export class App {
       },
     });
     this.pointer = new PointerAim(canvas, this.renderer);
+    this.badges = new BadgeTracker(this.save.data.badges, (b) => {
+      this.save.update('badges', (list) => {
+        if (!list.includes(b.id)) list.push(b.id);
+      });
+      toast(`Nový odznak: ${b.icon} ${b.name}`, { variant: 'success', icon: UI_ICONS.trophy, duration: 3200 });
+      sfx.coin();
+    });
     this.loop = new FixedLoop({ update: (dt) => this.update(dt), render: (dt) => this.render(dt) }, SIM_DT);
 
     const ro = new ResizeObserver(() => this.resize());
@@ -202,7 +212,10 @@ export class App {
     const isDemo = m === this.demo;
     for (const e of m.drainEvents()) {
       this.renderer.handleEvent(e, m);
-      if (!isDemo) this.sound.handle(e);
+      if (!isDemo) {
+        this.sound.handle(e);
+        this.badges.event(e, m);
+      }
     }
     if (!isDemo && this.state === 'play') {
       const t = m.active;
@@ -276,6 +289,15 @@ export class App {
         case 'targets':
           void this.start({ mode: 'targets' });
           break;
+        case 'stats': {
+          this.dialogOpen = true;
+          const dlg = openDialog({ title: 'Odznaky a statistiky', icon: UI_ICONS.trophy, content: statsContent(this.save), wide: true, actions: [{ label: 'Zavřít', value: 'ok' }] });
+          void dlg.closed.then(() => {
+            this.dialogOpen = false;
+            this.goHome();
+          });
+          break;
+        }
         case 'help':
           this.openHelp().then(() => this.goHome());
           break;
@@ -527,6 +549,7 @@ export class App {
     const mode = m.mode as SurvivalMode;
     this.setState('reward');
     sfx.levelUp();
+    this.badges.waveCleared(mode.wave);
     const s = showReward(mode.wave, opts);
     this.track(s);
     void s.done.then((i) => {
@@ -589,6 +612,18 @@ export class App {
       this.save.update('targets', (s) => (s.bestScore = Math.max(s.bestScore, mode.score)));
       best = this.save.data.targets.bestScore;
     }
+    // badges
+    const player = m.world.tanks.find((t) => t.control === 'human');
+    this.badges.result(r, m, {
+      level: m.mode instanceof CampaignMode ? m.mode.def.id : undefined,
+      totalStars: this.save.totalStars,
+      maxStars: LEVELS.length * 3,
+      campaignDone: this.save.data.campaign.stars.filter((s) => s > 0).length >= LEVELS.length,
+      wave: m.mode instanceof SurvivalMode ? m.mode.wave : undefined,
+      score: m.mode instanceof TargetsMode ? m.mode.score : undefined,
+      damageTaken: player?.damageTaken,
+      vsBot: m.world.tanks.some((t) => t.control === 'bot'),
+    });
     recordActivity('tanky', this.activity());
 
     this.resultTimer = window.setTimeout(() => {

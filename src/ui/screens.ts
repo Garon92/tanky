@@ -2,6 +2,7 @@ import type { Difficulty, DuelSlotSave, Save } from '../core/storage';
 import { BIOME_ORDER, BIOMES } from '../game/biomes';
 import { levelById, LEVELS, WORLDS, type LevelDef } from '../game/levels';
 import type { RewardOption } from '../game/match';
+import { BADGES } from '../game/badges';
 import { TANK_KINDS, TEAM_COLORS, TEAM_NAMES } from '../game/tank';
 import { WEAPON_ORDER, WEAPONS } from '../game/weapons';
 import { getApp } from '../kit/apps';
@@ -66,7 +67,48 @@ function focusFirst(panel: HTMLElement): void {
 // Home
 // -----------------------------------------------------------------------------
 
-export type HomeChoice = 'campaign' | 'duel' | 'survival' | 'targets' | 'help';
+export type HomeChoice = 'campaign' | 'duel' | 'survival' | 'targets' | 'help' | 'stats';
+
+/** "Odznaky a statistiky" dialog content. */
+export function statsContent(save: Save): HTMLElement {
+  const d = save.data;
+  const s = d.stats;
+  const acc = s.shots > 0 ? `${Math.round((s.hits / s.shots) * 100)} %` : '–';
+  const stat = (label: string, value: string, icon = '') => h('div', { class: 'g92-overlay__stat' }, h('dt', { html: icon + label }), h('dd', null, value));
+  const statsGrid = h(
+    'dl',
+    { class: 'g92-overlay__stats tk-stats' },
+    stat('Hry', String(s.games)),
+    stat('Výhry', String(s.wins)),
+    stat('Výstřely', String(s.shots)),
+    stat('Přesnost', acc),
+    stat('Zničené tanky', String(s.kills)),
+    stat('Hvězdy', `${save.totalStars}/${LEVELS.length * 3}`),
+    stat('Přežití', d.survival.bestScore ? `${d.survival.bestScore} (vlna ${d.survival.bestWave})` : '–'),
+    stat('Střelnice', d.targets.bestScore ? String(d.targets.bestScore) : '–'),
+  );
+  const list = h('ul', { class: 'tk-badges' });
+  for (const b of BADGES) {
+    const got = d.badges.includes(b.id);
+    list.append(
+      h(
+        'li',
+        { class: `tk-badge${got ? ' is-got' : ''}`, title: b.desc },
+        h('span', { class: 'tk-badge__icon', 'aria-hidden': 'true' }, got ? b.icon : '🔒'),
+        h('span', { class: 'tk-badge__text' }, h('b', null, b.name), h('small', null, b.desc)),
+        h('span', { class: 'g92-sr-only' }, got ? 'získáno' : 'zatím nezískáno'),
+      ),
+    );
+  }
+  return h(
+    'div',
+    { class: 'tk-statsdlg' },
+    h('h3', null, `Odznaky (${d.badges.length} z ${BADGES.length})`),
+    list,
+    h('h3', null, 'Statistiky'),
+    statsGrid,
+  );
+}
 
 export function showHome(save: Save): Screen<HomeChoice> {
   const s = screen<HomeChoice>('home', { backdrop: 'clear', wide: true });
@@ -119,7 +161,12 @@ export function showHome(save: Save): Screen<HomeChoice> {
     sfx.tap();
     s.close('help');
   });
-  s.panel.append(hero, grid, h('div', { class: 'tk-home__foot' }, help));
+  const badges = d.badges.length;
+  const stats = btn(badges ? `Odznaky ${badges}/${BADGES.length}` : 'Odznaky a statistiky', 'g92-btn--secondary g92-btn--lg', UI_ICONS.trophy, () => {
+    sfx.tap();
+    s.close('stats');
+  });
+  s.panel.append(hero, grid, h('div', { class: 'tk-home__foot' }, help, stats));
   focusFirst(s.panel);
   return s;
 }
