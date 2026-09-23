@@ -227,7 +227,15 @@ export function showCampaign(save: Save): Screen<number | null> {
     );
   }
   s.panel.append(head, worlds);
-  requestAnimationFrame(() => (firstOpen as HTMLElement | null)?.focus({ preventScroll: true }));
+  requestAnimationFrame(() => {
+    const el = firstOpen as HTMLElement | null;
+    el?.focus({ preventScroll: true });
+    // open the map at the level to play next (not at world 1) – only when it isn't visible already
+    if (el) {
+      const r = el.getBoundingClientRect();
+      if (r.bottom > innerHeight - 16 || r.top < 0) el.scrollIntoView({ block: 'center', behavior: 'instant' });
+    }
+  });
   return s;
 }
 

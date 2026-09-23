@@ -129,6 +129,19 @@ export class App {
     });
 
     this.appbar?.addEventListener('g92-help', () => this.openHelp());
+    // leave guard: "‹ Menu" during a running battle pauses and asks first (same dialog as the kit's
+    // confirmLeave; replaced by kit guardLeave once the appbar dispatches g92-back)
+    this.appbar?.addEventListener(
+      'click',
+      (e) => {
+        const back = e.composedPath().find((n) => n instanceof HTMLAnchorElement && n.classList.contains('back')) as HTMLAnchorElement | undefined;
+        if (!back || !this.inBattle()) return;
+        e.preventDefault();
+        e.stopPropagation();
+        void this.confirmLeave(back.href);
+      },
+      true,
+    );
     this.appbar?.addEventListener('g92-settings', (e) => {
       e.preventDefault();
       this.openSettings();
@@ -382,6 +395,33 @@ export class App {
     });
   }
 
+  /** a match is running (leaving would lose it) */
+  private inBattle(): boolean {
+    return !!this.match && (this.state === 'play' || this.state === 'paused' || this.state === 'reward');
+  }
+
+  private async confirmLeave(href: string): Promise<void> {
+    if (this.dialogOpen) return;
+    if (this.state === 'play') this.pause();
+    this.dialogOpen = true;
+    const msg = document.createElement('p');
+    msg.className = 'g92-muted';
+    msg.textContent = 'Rozehraná hra se neuloží.';
+    const d = openDialog({
+      title: 'Odejít do menu?',
+      icon: UI_ICONS.grid,
+      content: msg,
+      dismissValue: 'stay',
+      actions: [
+        { label: 'Odejít', value: 'leave', variant: 'secondary' },
+        { label: 'Zůstat', value: 'stay', variant: 'primary', autofocus: true, icon: UI_ICONS.play },
+      ],
+    });
+    const v = await d.closed;
+    this.dialogOpen = false;
+    if (v === 'leave') location.href = href;
+  }
+
   openHelp(): Promise<void> {
     const wasPlaying = this.state === 'play';
     if (wasPlaying) this.pause();
@@ -584,7 +624,7 @@ export class App {
     const p = showPause({
       subtitle: info.title,
       menuHref: null,
-      menuLabel: 'Domů',
+      menuLabel: this.spec?.mode === 'campaign' ? 'Úrovně' : 'Domů',
       stats: info.counters.map((c) => ({ label: c.label, value: c.value })),
     });
     this.track(p);
