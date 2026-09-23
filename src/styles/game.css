@@ -1853,3 +1853,37 @@ html[data-input='touch'] .tk-reward .g92-kbd {
 .tk-stats {
   grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
 }
+
+/* ---- waiting row: whose turn + fast-forward ---- */
+.tk-waitrow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+}
+
+.tk-dock.is-human .tk-waitrow {
+  display: none;
+}
+
+.tk-fast {
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--glass-line);
+  background: var(--glass-strong);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  font-weight: 800;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.tk-fast[aria-pressed='true'] {
+  background: color-mix(in oklab, var(--accent) 60%, #000);
+  border-color: color-mix(in oklab, var(--accent) 70%, #fff);
+}
+
+.tk-fast[hidden] {
+  display: none;
+}

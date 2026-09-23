@@ -260,6 +260,7 @@ export class Renderer {
     // aim helpers
     const act = match.active;
     if (act && match.isHumanTurn) {
+      this.drawGhost(ctx, match, act);
       this.drawGuide(ctx, match, act);
       this.drawPips(ctx, act, fdt);
       if (this.pointer.active) this.drawPointerAim(ctx, act);
@@ -369,6 +370,26 @@ export class Renderer {
       ctx.lineWidth = 1.2;
       ctx.stroke();
     }
+  }
+
+  /** Faint dashed path of the tank's previous shot – helps to correct the aim. */
+  private drawGhost(ctx: CanvasRenderingContext2D, match: Match, t: Tank): void {
+    const path = match.lastPath.get(t.id);
+    if (!path || path.length < 6) return;
+    ctx.save();
+    ctx.setLineDash([5, 9]);
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+    ctx.lineWidth = 3.5;
+    ctx.beginPath();
+    ctx.moveTo(path[0] as number, path[1] as number);
+    for (let i = 2; i < path.length; i += 2) ctx.lineTo(path[i] as number, path[i + 1] as number);
+    ctx.stroke();
+    ctx.strokeStyle = t.color;
+    ctx.globalAlpha = 0.45;
+    ctx.lineWidth = 1.8;
+    ctx.stroke();
+    ctx.restore();
   }
 
   /** The original game's pulsing aim "pips": direction + a feel for power. */

@@ -11,6 +11,8 @@ import { ICON, WEAPON_ICONS } from './icons';
 export interface HudCallbacks {
   pause(): void;
   fire(): void;
+  /** Fast-forward opponents' turns. */
+  fast(on: boolean): void;
 }
 
 /** In-game HUD (DOM overlay above the canvas). Updates only what changed each frame. */
@@ -33,6 +35,7 @@ export class Hud {
   private fuelBar: HTMLElement;
   private driveBox: HTMLElement;
   private fireBtn: HTMLButtonElement;
+  private fastBtn: HTMLButtonElement;
   private picker: HTMLElement;
   private cache = new Map<string, string>();
   private pillTanks: Tank[] = [];
@@ -72,7 +75,13 @@ export class Hud {
     this.fireBtn = h('button', { type: 'button', class: 'tk-fire', 'aria-label': 'Vystřelit (mezerník)', html: `${ICON.fire}<span>PAL!</span>` }) as HTMLButtonElement;
     this.fireBtn.addEventListener('click', () => this.cb.fire());
     const controls = h('div', { class: 'tk-controls' }, this.weaponBtn, angle, power, this.driveBox, this.fireBtn);
-    this.dock = h('div', { class: 'tk-dock' }, this.turnLabel, controls);
+    this.fastBtn = h('button', { type: 'button', class: 'tk-fast', 'aria-pressed': 'false', title: 'Zrychlit tahy soupeřů' }, '⏩ Rychleji') as HTMLButtonElement;
+    this.fastBtn.addEventListener('click', () => {
+      const on = this.fastBtn.getAttribute('aria-pressed') !== 'true';
+      this.setFast(on);
+      this.cb.fast(on);
+    });
+    this.dock = h('div', { class: 'tk-dock' }, h('div', { class: 'tk-waitrow' }, this.turnLabel, this.fastBtn), controls);
     this.picker = h('div', { class: 'tk-picker', role: 'dialog', 'aria-label': 'Výběr zbraně', hidden: true });
 
     this.el = h('div', { class: 'tk-hud', hidden: true }, top, this.banner, this.hint, this.picker, this.dock);
@@ -110,6 +119,11 @@ export class Hud {
       h('span', { class: 'tk-readout' }, h('span', { class: 'tk-label' }, label), readout),
       mk(plus, plusIcon, aria[1] as string),
     );
+  }
+
+  setFast(on: boolean): void {
+    this.fastBtn.setAttribute('aria-pressed', String(on));
+    this.fastBtn.textContent = on ? '⏩ Zrychleno' : '⏩ Rychleji';
   }
 
   /** Height of the control dock in CSS px (for camera insets on portrait screens). */
@@ -221,6 +235,7 @@ export class Hud {
       } else if (m.phase === 'flight') this.turnLabel.textContent = '';
       else this.turnLabel.textContent = '';
       this.turnLabel.hidden = !this.turnLabel.textContent;
+      this.fastBtn.hidden = human || !(m.phase === 'aim' || m.phase === 'flight') || !m.world.tanks.some((x) => x.control === 'bot' && x.alive);
       this.dock.style.setProperty('--c', t?.color ?? 'var(--accent)');
     });
     if (t) {

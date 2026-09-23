@@ -54,6 +54,8 @@ export class App {
   private resultTimer = 0;
   private dialogOpen = false;
   private rotateTipShown = false;
+  /** Fast-forward opponents' turns (HUD toggle). */
+  private fastPref = false;
 
   constructor(
     private stage: HTMLElement,
@@ -66,6 +68,9 @@ export class App {
       pause: () => this.pause(),
       fire: () => {
         if (this.state === 'play' && this.match?.fire()) this.pointer.cancel();
+      },
+      fast: (on) => {
+        this.fastPref = on;
       },
     });
     this.pointer = new PointerAim(canvas, this.renderer);
@@ -208,6 +213,7 @@ export class App {
     }
     const run = this.state === 'menu' || this.state === 'play' || this.state === 'results';
     if (run) m.update(dt);
+    this.loop.timeScale = this.fastPref && this.state === 'play' && !m.isHumanTurn ? 3 : 1;
     // events → visuals & sound
     const isDemo = m === this.demo;
     for (const e of m.drainEvents()) {
@@ -420,6 +426,8 @@ export class App {
       }
     }
     this.hud.show(m);
+    this.fastPref = false;
+    this.hud.setFast(false);
     this.setState('play');
     this.lastAim.id = 0;
     if (!this.rotateTipShown && window.innerHeight > window.innerWidth * 1.1 && window.innerWidth < 700) {

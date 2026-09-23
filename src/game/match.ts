@@ -144,6 +144,9 @@ export class Match {
   /** Bots think faster (survival/demo). */
   botSpeed = 1;
   lastImpact = new Map<number, { x: number; y: number; n: number }[]>();
+  /** Flight path of each tank's last shot (x,y pairs). */
+  lastPath = new Map<number, number[]>();
+  private recording = 0;
 
   constructor(
     readonly mode: Mode,
@@ -163,6 +166,7 @@ export class Match {
     this.world = w;
     this.brains.clear();
     this.lastImpact.clear();
+    this.lastPath.clear();
     for (const t of w.tanks) if (t.control === 'bot') this.brains.set(t.id, this.makeBrain(t));
   }
 
@@ -233,6 +237,14 @@ export class Match {
       }
       case 'flight':
         this.flightT += dt;
+        // record the main projectile's path (ghost line of the last shot)
+        if (this.recording && this.turnShooter) {
+          const p = this.world.projectiles.find((q) => q.id === this.recording);
+          if (p) {
+            const path = this.lastPath.get(this.turnShooter.id);
+            if (path && (this.phaseT * 30) % 1 < dt * 30) path.push(p.x, p.y);
+          } else this.recording = 0;
+        }
         if (this.world.isBusy()) {
           this.settleT = 0;
           if (this.flightT > 25) {
@@ -274,7 +286,13 @@ export class Match {
   fire(): boolean {
     const t = this.active;
     if (!t || this.phase !== 'aim' || !t.alive) return false;
+    const before = this.world.projectiles.length;
     this.world.fire(t);
+    // follow the middle projectile of this shot for the ghost path
+    const fired = this.world.projectiles.slice(before);
+    const main = fired[Math.floor(fired.length / 2)];
+    this.recording = main ? main.id : 0;
+    this.lastPath.set(t.id, main ? [main.x, main.y] : []);
     this.turnShooter = t;
     this.turnHit = false;
     this.turnDamage = 0;
